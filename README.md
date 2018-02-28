@@ -36,3 +36,10 @@ export PATH=$HOME/.cache/rebar3/bin:$PATH
 ```
 
 The `rebar3 plugins list` command can be runned in order to check whether the binary can now be executed.
+
+After creating a new grispapp and adding the toolchain in the `rebar.config` of that app, it can be built using :
+
+```
+cd <grisp app name>
+rebar3 grisp build
+```
