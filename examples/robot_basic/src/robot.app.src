@@ -6,15 +6,7 @@
     {applications, [
         kernel,
         stdlib,
-        grisp,
-        lager,
-        plumtree,
-        partisan,
-        types,
-        time_compat,
-        rand_compat,
-        lasp_support,
-        gen_flow
+        grisp
     ]},
     {env,[]},
     {modules, []},
