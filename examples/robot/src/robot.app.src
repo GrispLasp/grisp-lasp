@@ -6,9 +6,28 @@
     {applications, [
         kernel,
         stdlib,
-        grisp
+        grisp,
+        lager,
+        lasp
     ]},
-    {env,[]},
+    {env,[{lasp, [{membership, true},
+             {storage_backend, lasp_ets_storage_backend},
+             {mode, delta_based},
+             {delta_interval, 1000}]},
+
+     {plumtree, [{broadcast_exchange_timer, 60000},
+                 {broadcast_mods, [lasp_plumtree_backend]}]},
+
+     {partisan, [{partisan_peer_service_manager, partisan_hyparview_peer_service_manager}]},
+
+     {lager, [
+       {handlers, [
+         {lager_console_backend, [{level, info}]},
+         {lager_file_backend, [{file, "error.log"}, {level, error}]},
+         {lager_file_backend, [{file, "console.log"}, {level, info}]}
+       ]}
+     ]}
+    ]},
     {modules, []},
 
     {maintainers, []},
