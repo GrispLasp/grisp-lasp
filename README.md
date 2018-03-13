@@ -13,9 +13,9 @@ $ sudo ./grisp_deploy.sh -s /Path/to/GRISP -a /Path/to/application/ [-n <name>]
 ```
 Where the parameters are the following :
 
-- `-s` : SD Card path e.g. : -s /Volumes/GRISP
+- `-s` : SD Card path e.g. : `-s /Volumes/GRISP`
 
-- `-a` : Path to the target application root folder e.g. : /GRISP/robot/
+- `-a` : Path to the target application root folder e.g. : `-a /GRISP/robot/`
 
 - `n` : (optional) Name of the target application e.g. : robot. If not supplied, the first found module will be deployed.
 
