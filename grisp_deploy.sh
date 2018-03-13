@@ -9,6 +9,36 @@ GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 NC='\033[0m'
 
+# [ `uname -s` != "Darwin" ] && return
+
+
+function tab () {
+    echo "tab call";
+    local cmd=""
+    local cdto="$PWD"
+    local args="$@"
+
+    if [ -d "$1" ]; then
+        cdto=`cd "$1"; pwd`
+        args="${@:2}"
+    fi
+
+    if [ -n "$args" ]; then
+        cmd="; $args"
+    fi
+
+    osascript &>/dev/null <<EOF
+        tell application "Terminal"
+            tell current terminal
+                launch session "Default Session"
+                tell the last session
+                    write text "cd \"$cdto\"$cmd"
+                end tell
+            end tell
+        end tell
+EOF
+}
+
 contains () {
   local e match="$1"
   shift
@@ -16,15 +46,21 @@ contains () {
   return 1
 }
 
-while getopts s:a:n option
+while getopts s:a:n:h:c: option
 do
   case "${option}"
   in
     s) SDPATH=${OPTARG};;
     a) APPLICATION=${OPTARG};;
     n) NAME=${OPTARG};;
+    h) HOSTNAME=${OPTARG};;
+    c) COOKIE=${OPTARG};;
   esac
 done
+
+echo "${NAME}";
+echo "${HOSTNAME}";
+echo "${COOKIE}";
 
 while [[ true ]]
 do
@@ -100,7 +136,12 @@ do
           echo "windows" >&2
           exit 1
       fi
-  else
-      sleep 1;
+  elif [[ -n $NAME && -n $COOKIE && -n $HOSTNAME ]]; then
+      echo "trying to connect to remote shell";
+      # osascript -e 'set x to "a"
+      # say x'
+      osascript -e "tell application \"Chrome\""
+      osascript -e "activate"
   fi
+  sleep 1;
 done
