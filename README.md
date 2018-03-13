@@ -2,6 +2,23 @@
 # Running Lasp Language on GRiSP boards
 This is a repository intended to gather information and provide useful support for design and configuration of applications written in [Lasp](https://lasp-lang.readme.io/) and running on [GRiSP](https://www.grisp.org/) boards.
 
+## Auto-deployment script usage :
+
+The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting.
+
+Usage :
+
+```
+$ sudo ./grisp_deploy.sh -s /Path/to/GRISP -a /Path/to/application/ [-n <name>]
+```
+Where the parameters are the following :
+
+- `-s` : SD Card path e.g. : -s /Volumes/GRISP
+
+- `-a` : Path to the target application root folder e.g. : /GRISP/robot/
+
+- `n` : (optional) Name of the target application e.g. : robot. If not supplied, the first found module will be deployed.
+
 ## Installation :
 
 Documentation is available in the [Grisp wiki](https://github.com/grisp/grisp/wiki/). This section describes specific encountered installation cases and further remarks/notes.

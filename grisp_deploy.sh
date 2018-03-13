@@ -5,6 +5,8 @@ if ! [ $(id -u) = 0 ]; then
 fi
 
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+ORANGE='\033[0;33m'
 NC='\033[0m'
 
 contains () {
@@ -49,47 +51,47 @@ do
           diskutil unmount $SDPATH;
           retval=$?;
           if [[ $retval -eq 1 ]]; then
-            echo "unmount failed, cleaning PIDs...";
+            echo -e "${RED}unmount failed, cleaning PIDs...${NC}";
             pids=( $(fuser -c $SDPATH) );
             sudo kill -9 ${pids[*]};
             echo "retrying unmount...";
             sudo diskutil unmount $SDPATH;
             sudoretval=$?;
             while [[ $sudoretval -ne 0 ]]; do
-              echo "forcing unmount";
+              echo -e "${ORANGE}forcing unmount${NC}";
               pids=( $(fuser -c $SDPATH) );
               sudo kill -9 ${pids[*]};
               sudo diskutil unmount $SDPATH;
               sudoretval=$?;
             done
-            echo "unmount success with sudo privilegies";
-            echo -e "${RED}Application deployed to SD Card, ready to remove ... "
+            echo -e "${ORANGE}unmount success with sudo privilegies${NC}";
+            echo -e "${GREEN}Application deployed to SD Card, ready to remove ... ${NC}"
           elif [[ $retval -eq 0 ]]; then
             echo "unmount success";
-            echo -e "${RED}Application deployed to SD Card, ready to remove ... "
+            echo -e "${GREEN}Application deployed to SD Card, ready to remove ... ${NC}"
           fi
       elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
           umount $SDPATH;
           retval=$?;
           if [[ $retval -eq 1 ]]; then
-            echo "unmount failed, cleaning PIDs...";
+            echo -e "${RED}unmount failed, cleaning PIDs...${NC}";
             pids=( $(fuser -c $SDPATH) );
             sudo kill -9 ${pids[*]};
             echo "retrying unmount...";
-            sudo diskutil unmount $SDPATH;
+            sudo umount $SDPATH;
             sudoretval=$?;
             while [[ $sudoretval -ne 0 ]]; do
-              echo "forcing unmount";
+              echo -e "${ORANGE}forcing unmount${NC}";
               pids=( $(fuser -c $SDPATH) );
               sudo kill -9 ${pids[*]};
-              sudo diskutil unmount $SDPATH;
+              sudo umount $SDPATH;
               sudoretval=$?;
             done
-            echo "unmount success with sudo privilegies";
-            echo -e "${RED}Application deployed to SD Card, ready to remove ... "
+            echo -e "${ORANGE}unmount success with sudo privilegies${NC}";
+            echo -e "${GREEN}Application deployed to SD Card, ready to remove ... ${NC}"
           elif [[ $retval -eq 0 ]]; then
             echo "unmount success";
-            echo -e "${RED}Application deployed to SD Card, ready to remove ... "
+            echo -e "${GREEN} ===> Application deployed to SD Card, ready to remove ... ${NC}"
           fi
       elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
           echo "windows" >&2
