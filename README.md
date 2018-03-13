@@ -4,7 +4,9 @@ This is a repository intended to gather information and provide useful support f
 
 ## Auto-deployment script usage :
 
-The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting.
+The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting. 
+
+Note : the rebar.config must not call unmount/umount in the post_script argument for the grisp plugin.
 
 Usage :
 
