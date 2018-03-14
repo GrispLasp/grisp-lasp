@@ -9,34 +9,78 @@ GREEN='\033[0;32m'
 ORANGE='\033[0;33m'
 NC='\033[0m'
 
-# [ `uname -s` != "Darwin" ] && return
+rebar3 -v &>/dev/null;
+retval=$?;
+
+case retval in
+  127 )
+    echo -e "${RED}rebar3 command unavailable, aborting...${NC}";
+    ;;
+  * )
+    echo -e "${GREEN}rebar3 command found${NC}";
+    ;;
+
+esac
+
+while getopts s:a:n:h:c: option
+do
+  case "${option}"
+    in
+    s) SDPATH=${OPTARG};;
+    a) APPLICATION=${OPTARG};;
+    n) NAME=${OPTARG};;
+    h) HOSTNAME=${OPTARG};;
+    c) COOKIE=${OPTARG};;
+  esac
+done
 
 
-function tab () {
-    echo "tab call";
-    local cmd=""
-    local cdto="$PWD"
-    local args="$@"
+# sudo apt install xdotool
+# sudo apt install wmctrl
 
-    if [ -d "$1" ]; then
-        cdto=`cd "$1"; pwd`
-        args="${@:2}"
-    fi
-
-    if [ -n "$args" ]; then
-        cmd="; $args"
-    fi
-
-    osascript &>/dev/null <<EOF
-        tell application "Terminal"
-            tell current terminal
-                launch session "Default Session"
-                tell the last session
-                    write text "cd \"$cdto\"$cmd"
-                end tell
-            end tell
-        end tell
-EOF
+# function tab () {
+#   WID=$(xprop -root | grep "_NET_ACTIVE_WINDOW(WINDOW)"| awk '{print $5}')
+#   xdotool windowfocus $WID
+#   xdotool key ctrl+shift+t
+#   wmctrl -i -a $WID
+#     echo "tab call";
+#     local cmd=""
+#     local cdto="$PWD"
+#     local args="$@"
+#
+#     if [ -d "$1" ]; then
+#         cdto=`cd "$1"; pwd`
+#         args="${@:2}"
+#     fi
+#
+#     if [ -n "$args" ]; then
+#         cmd="; $args"
+#     fi
+#
+#     osascript &>/dev/null <<EOF
+#         tell application "Terminal"
+#             tell current terminal
+#                 launch session "Default Session"
+#                 tell the last session
+#                     write text "cd \"$cdto\"$cmd"
+#                 end tell
+#             end tell
+#         end tell
+# EOF
+# }
+container() {
+    pid=$$
+    while true; do
+        pid=$(ps -h -o ppid -p $pid 2>/dev/null)
+        case $(ps -h -o comm -p $pid 2>/dev/null) in
+          (gnome-terminal) echo "Running in gnome terminal";return;;
+          (xterm) echo "Running in xterm";return;;
+          (konsole) echo "Running in konsole";return;;
+          (rxvt) echo "Running in rxvt";return;;
+          (python) if [ ! -z "$(ps -h -o args -p $pid 2>/dev/null | grep guake)" ]; then echo "Running in Guake"; return; fi ;;
+        esac
+        [[ $(echo $pid) == 1 ]] && break
+    done
 }
 
 contains () {
@@ -46,29 +90,21 @@ contains () {
   return 1
 }
 
-while getopts s:a:n:h:c: option
-do
-  case "${option}"
-  in
-    s) SDPATH=${OPTARG};;
-    a) APPLICATION=${OPTARG};;
-    n) NAME=${OPTARG};;
-    h) HOSTNAME=${OPTARG};;
-    c) COOKIE=${OPTARG};;
-  esac
-done
-
-echo "${NAME}";
-echo "${HOSTNAME}";
-echo "${COOKIE}";
+if [[ -n $APPLICATION ]]; then
+  # clean-up and fresh rebuild
+  cd $APPLICATION;
+  sudo rm -rdf _build/*;
+  rebar3 grisp build;
+fi
 
 while [[ true ]]
 do
-  ((counter++));
+  # ((counter++));
   if [[ -d $SDPATH ]]; then
+      sudo rm -rdf $SDPATH*;
       cd $APPLICATION && rebar3 compile;
       if [[ -n $NAME ]]; then
-        rebar3 grisp deploy --relname $NAME --relvsn 0.1.0;
+        cd $APPLICATION && rebar3 grisp deploy --relname $NAME --relvsn 0.1.0;
       else
         cd $APPLICATION/src;
         FILES=();
@@ -137,11 +173,17 @@ do
           exit 1
       fi
   elif [[ -n $NAME && -n $COOKIE && -n $HOSTNAME ]]; then
-      echo "trying to connect to remote shell";
-      # osascript -e 'set x to "a"
-      # say x'
-      osascript -e "tell application \"Chrome\""
-      osascript -e "activate"
+      echo -e "${ORANGE}trying to connect to remote shell...${NC}";
+      # res=$(erl -sname my_remote_shell -remsh $NAME@$HOSTNAME -setcookie $COOKIE);
+      container
+      cnt=$(ps -h -o comm -p $pid 2>/dev/null);
+      echo $cnt;
+      erl -run -sname my_remote_shell -remsh $NAME@$HOSTNAME -setcookie $COOKIE -run init stop;
+      # erl -run -v -run init stop;
+      # erv -v -async_shell_start;
+      # eval "$cnt --new-tab --workdir $APPLICATION -e erl -sname my_remote_shell -remsh $NAME@$HOSTNAME -setcookie $COOKIE" &>/dev/null;
+      # echo "${res}";
+      # break;
   fi
   sleep 1;
 done
