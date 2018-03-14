@@ -4,7 +4,9 @@ This is a repository intended to gather information and provide useful support f
 
 ## Auto-deployment script usage :
 
-The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting.
+The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting. 
+
+Note : the rebar.config must not call unmount/umount in the post_script argument for the grisp plugin.
 
 Usage :
 
@@ -13,9 +15,9 @@ $ sudo ./grisp_deploy.sh -s /Path/to/GRISP -a /Path/to/application/ [-n <name>]
 ```
 Where the parameters are the following :
 
-- `-s` : SD Card path e.g. : -s /Volumes/GRISP
+- `-s` : SD Card path e.g. : `-s /Volumes/GRISP`
 
-- `-a` : Path to the target application root folder e.g. : /GRISP/robot/
+- `-a` : Path to the target application root folder e.g. : `-a /GRISP/robot/`
 
 - `n` : (optional) Name of the target application e.g. : robot. If not supplied, the first found module will be deployed.
 
