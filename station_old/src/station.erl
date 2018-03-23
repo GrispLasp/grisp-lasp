@@ -24,22 +24,13 @@ start(_Type, _Args) ->
     % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
     % partisan_sup:start_link(),
     % lasp_sup:start_link(),
-    % {ok, Hyparview} = partisan_hyparview_peer_service_manager:start_link(),
-    % timer:sleep(5000),
-    % timer:sleep(5000),
-    % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
-    ok = partisan_config:init(),
-    timer:sleep(5000),
-    Self = partisan_peer_service_manager:myself(),
-    timer:sleep(5000),
-    pong = ping_station(),
+
     % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
     % partisan_config:set(peer_ip, {192,168,1,11}),
     % partisan_hyparview_peer_service_manager:start_link(),
     % partisan_default_peer_service_manager:start_link(),
     % grisp_led:pattern(1, [{100, Random}]),
     % application:load(partisan),
-    % application_controller:which_applications(),
     % partisan_sup:start_link(),
     % partisan_default_peer_service_manager:start_link(),
     % partisan_default_peer_service_manager:myself(),
@@ -52,19 +43,9 @@ start(_Type, _Args) ->
     % net_adm:ping(lasp1@dan).
     % Epmd = (net_kernel:epmd_module()),
     % {ok, Subnets} = inet:getif(),
-    {ok, Supervisor, Self}.
+    {ok, Supervisor}.
 
 stop(_State) -> ok.
-
-ping_station() ->
-  Ping = net_adm:ping('station@MacBook-Pro'),
-  if
-   Ping == pong ->
-      pong;
-   Ping == pang ->
-      timer:sleep(1000),
-      ping_station()
-  end.
 
 getip() ->
     {ok, Addrs} = inet:getifaddrs(),

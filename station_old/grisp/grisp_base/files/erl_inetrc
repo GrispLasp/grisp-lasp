@@ -1,10 +1,9 @@
 %--- Erlang Inet Configuration -------------------------------------------------
 
 % Add hosts
-{host, {192,168,1,36}, ["Laymer-2"]}.
-{host, {192,168,1,23}, ["my_grisp_board"]}.
-{host, {192,168,1,3}, ["MacBook-Pro"]}.
 {host, {192,168,1,52}, ["Laymer"]}.
+{host, {192,168,1,11}, ["my_grisp_board"]}.
+{host, {192,168,1,41}, ["MacBook-Pro"]}.
 
 % Do not monitor the hosts file
 {hosts_file, ""}.
