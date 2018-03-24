@@ -2,6 +2,31 @@
 # Running Lasp Language on GRiSP boards
 This is a repository intended to gather information and provide useful support for design and configuration of applications written in [Lasp](https://lasp-lang.readme.io/) and running on [GRiSP](https://www.grisp.org/) boards.
 
+## Cloning/Copying existing project :
+If the rebar3 grisp build command returns an error code that contains anything similar to :
+```
+configure: error: C compiler cannot create executables
+```
+Eventhough the toolchain path is correctly set in the rebar.config of the project, emptying the rebar3 cache and rebuilding in a new project should provide a workaround. It can be done with the following commands (shell) :
+
+```
+rm -rdf {~/.cache/rebar3/*,/path/to/defect/project}
+rebar3 new grispapp=newproject dest=/path/to/sd
+cp -a /path/to/defect/project/{grisp,rebar.config,src} /path/to/newproject && cd /path/to/newproject && rebar3 grisp build
+```
+
+Since the environment and path can be altered if builds/deployments have been made if sudo was previously called, the files in otp/20.2/build/make can contain incorrect references when the configuration is run after a build. Erasing the cache and building from a new app folder can solve this issue. 
+
+### Dependencies source files inclusion :
+If the sources of the application's dependencies are not correctly included in the build for the SD card, cleaning the previous build and unlocking the rebar lock file can be helpful :
+
+```
+cd /path/to/project && rm -rdf {_build,_grisp}
+rebar3 unlock && rebar3 grisp build && rebar3 compile
+```
+
+NOTE : when calling commands cp and rm on multiple targets such as {file1,file2,...}, the files must always be separated by commas that are never followed by spaces e.g. never {file1, file2, ...} otherwise the shell is unable to locate them.
+
 ## Auto-deployment script usage :
 
 The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting. 
