@@ -1,30 +1,30 @@
--module(vortex_serv).
+-module(station_serv).
 -behaviour(gen_server).
 -export([start_link/3]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2, run/2]).
 
 
 -define(WORKER_SPEC(MFA),
-                    #{id => worker,
-                    start => {vortex_worker_sup, start_link, [MFA]},
+                    #{id => pinger,
+                    start => {station_worker_sup, start_link, [MFA]},
                     restart => temporary,
                     type => supervisor,
                     shutdown => 15000,
-                    modules => [vortex_worker_sup]}).
+                    modules => [station_worker_sup]}).
 
 -record(state, {sup,
                 workers}).
 
-start_link(Name, VortexSup, MFA) ->
-    gen_server:start_link({local, Name}, ?MODULE, {VortexSup, MFA}, []).
+start_link(Name, StationSup, MFA) ->
+    gen_server:start_link({local, Name}, ?MODULE, {StationSup, MFA}, []).
 
 %% Gen server
-init({VortexSup, MFA}) ->
-    self() ! {start_worker_supervisor, VortexSup, MFA},
+init({StationSup, MFA}) ->
+    self() ! {start_worker_supervisor, StationSup, MFA},
     {ok, #state{workers=gb_sets:empty()}}.
 
 run(Name, Args) ->
-  gen_server:call(Name, {run, Args}).
+    gen_server:call(Name, {run, Args}).
 
 handle_call({run, Args}, _From, S = #state{sup=Sup, workers=R}) ->
     {ok, Pid} = supervisor:start_child(Sup, Args),
@@ -37,17 +37,8 @@ handle_call(stop, _From, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info({'DOWN', Ref, process, _Pid, _}, S = #state{workers=Refs}) ->
-    io:format("received down msg~n"),
-    case gb_sets:is_element(Ref, Refs) of
-        true ->
-            {noreply, S#state{workers=gb_sets:delete(Ref,Refs)}};
-        false -> %% Not our responsibility
-            {noreply, S}
-    end;
-
-handle_info({start_worker_supervisor, VortexSup, MFA}, S = #state{}) ->
-    {ok, Pid} = supervisor:start_child(VortexSup, ?WORKER_SPEC(MFA)),
+handle_info({start_worker_supervisor, StationSup, MFA}, S = #state{}) ->
+    {ok, Pid} = supervisor:start_child(StationSup, ?WORKER_SPEC(MFA)),
     link(Pid),
     {noreply, S#state{sup=Pid}}.
 
