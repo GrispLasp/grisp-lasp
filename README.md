@@ -2,6 +2,13 @@
 # Running Lasp Language on GRiSP boards
 This is a repository intended to gather information and provide useful support for design and configuration of applications written in [Lasp](https://lasp-lang.readme.io/) and running on [GRiSP](https://www.grisp.org/) boards.
 
+## Proposed design 
+Based on the principles of edge computing specified by [LightKone](https://www.lightkone.eu/), the distributed nodes should be able to replicate a fraction of the state and operate locally. As an attempt to implement that pattern, the following design is proposed for an edge node :
+
+<p align="center">
+  <img src="Untitled Diagram.png" alt="Design"/>
+</p>
+
 ## Cloning/Copying existing project :
 If the rebar3 grisp build command returns an error code that contains anything similar to :
 ```
