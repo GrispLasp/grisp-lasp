@@ -27,14 +27,14 @@ start(_Type, _Args) ->
   lasp_peer_service:join('station@Laymer'),
   timer:sleep(5000),
 
-  {ok, {_, _, _, _}} = lasp:declare({<<"results">>, state_orset}, state_orset),
+  {ok, {_, _, _, _}} = lasp:declare({<<"aggregate">>, state_orset}, state_orset),
   timer:sleep(5000),
 
   master_sup:stop_vortex(pinger),
   timer:sleep(5000),
   {ok, _} = master_sup:start_vortex(computation, {vortex_generic_computation, start_link, []}),
   timer:sleep(5000),
-  {ok, _} = vortex_serv:run(computation, [{<<"functions">>, state_orset}]),
+  {ok, _} = vortex_serv:run(computation, [{<<"data">>, state_orset}]),
   timer:sleep(5000),
   LEDs = [1, 2],
   [grisp_led:flash(L, aqua, 500) || L <- LEDs],

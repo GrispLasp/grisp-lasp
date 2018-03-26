@@ -19,12 +19,12 @@ start(_Type, _Args) ->
   timer:sleep(5000),
   % {ok, {Id, Type, Metadata, Value}} = lasp:declare({<<"set">>, state_orset}, state_orset),
   % {ok, V} = lasp:query({<<"results">>, state_orset}).
-  {ok, {_, _, _, _}} = lasp:declare({<<"functions">>, state_orset}, state_orset),
+  {ok, {Id, _, _, _}} = lasp:declare({<<"data">>, state_orset}, state_orset),
   timer:sleep(5000),
   Computation = gen_compute(factorial(10)),
   % Binary = term_to_binary(Computation),
-  lasp:update({<<"functions">>, state_orset}, {add, {Computation}}, self()),
-
+  % lasp:update({<<"functions">>, state_orset}, {add, {Computation}}, self()),
+  lists:foreach(fun(Count) -> lasp:update(Id, {add, Count}, self()) end, lists:seq(1,50)),
   LEDs = [1, 2],
   [grisp_led:flash(L, aqua, 500) || L <- LEDs],
   timer:sleep(5000),

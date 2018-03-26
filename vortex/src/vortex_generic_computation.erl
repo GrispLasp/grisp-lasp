@@ -28,12 +28,13 @@ handle_cast(_Msg, State) ->
 
 handle_info({compute, {Set, Type}}, S = #state{vars=V}) ->
     io:format("Received ~w~n",[Type]),
-    {ok, Funs} = lasp:query({Set, Type}),
-    [B] = sets:to_list(Funs),
+    {ok, Data} = lasp:query({Set, Type}),
+    List = sets:to_list(Data),
     % TODO register station process for on-demand remote computations on all nodes in edge
     % F = binary_to_term(B),
     % F(),
-    lasp:update({<<"results">>, state_orset}, {add, {B}}, self()),
+    lasp:map({Set, Type}, fun(X) -> X * 10 end, {<<"aggregate">>, state_orset}),
+    % lasp:update({<<"aggregate">>, state_orset}, {add, {B}}, self()),
     % lasp:query({<<"functions">>, state_orset}).
     {noreply, S#state{vars=gb_sets:add(Set,V)}}.
 
