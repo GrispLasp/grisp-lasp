@@ -112,3 +112,5 @@ rebar3 grisp build
 The Grisp plugin for rebar will build the custom OTP version used in Grisp and will replace OTP's default version of `erl_main.c` with the file you previously modified.
 
 You can verify that your `erl_main.c` has been included in OTP's build by viewing the latter which is located at : `_grisp/otp/20.2/build/erts/emulator/sys/unix/erl_main.c`
+
+Note: An example is provided in `node/grisp/grisp_base/sys/erl_main.c`.
