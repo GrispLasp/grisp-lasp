@@ -1,0 +1,16 @@
+%--- Erlang Inet Configuration -------------------------------------------------
+
+% Add hosts
+{host, {169,254,16,93}, ["GrispAdhoc"]}.
+{host, {169,254,16,1}, ["my_grisp_board"]}.
+
+% Do not monitor the hosts file
+{hosts_file, ""}.
+
+% {nameserver, {169,254,16,93}}.
+
+% Disable caching
+{cache_size, 0}.
+
+% Specify lookup method
+{lookup, [file, native]}.
