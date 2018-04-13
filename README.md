@@ -2,7 +2,7 @@
 # Running Lasp Language on GRiSP boards
 This is a repository intended to gather information and provide useful support for design and configuration of applications written in [Lasp](https://lasp-lang.readme.io/) and running on [GRiSP](https://www.grisp.org/) boards.
 
-## Proposed design 
+## Proposed design
 Based on the principles of edge computing specified by [LightKone](https://www.lightkone.eu/), the distributed nodes should be able to replicate a fraction of the state and operate locally. As an attempt to implement that pattern, the following design is proposed for an edge node :
 
 <p align="center">
@@ -22,7 +22,7 @@ rebar3 new grispapp=newproject dest=/path/to/sd
 cp -a /path/to/defect/project/{grisp,rebar.config,src} /path/to/newproject && cd /path/to/newproject && rebar3 grisp build
 ```
 
-Since the environment and path can be altered if builds/deployments have been made if sudo was previously called, the files in otp/20.2/build/make can contain incorrect references when the configuration is run after a build. Erasing the cache and building from a new app folder can solve this issue. 
+Since the environment and path can be altered if builds/deployments have been made if sudo was previously called, the files in otp/20.2/build/make can contain incorrect references when the configuration is run after a build. Erasing the cache and building from a new app folder can solve this issue.
 
 ### Dependencies source files inclusion :
 If the sources of the application's dependencies are not correctly included in the build for the SD card, cleaning the previous build and unlocking the rebar lock file can be helpful :
@@ -36,7 +36,7 @@ NOTE : when calling commands cp and rm on multiple targets such as {file1,file2,
 
 ## Auto-deployment script usage :
 
-The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting. 
+The script detects when the SD Card is inserted and compiles the project, deploys and unmounts the card automatically. The script requires sudo privilegies for unmounting.
 
 Note : the rebar.config must not call unmount/umount in the post_script argument for the grisp plugin.
 
@@ -56,6 +56,8 @@ Where the parameters are the following :
 ## Installation :
 
 Documentation is available in the [Grisp wiki](https://github.com/grisp/grisp/wiki/). This section describes specific encountered installation cases and further remarks/notes.
+
+
 
 ### Ubuntu 16.04.3 LTS
 
@@ -94,3 +96,19 @@ After creating a new grispapp and adding the toolchain in the `rebar.config` of 
 cd <grisp app name>
 rebar3 grisp build
 ```
+
+## Configuring Grisp's network
+
+Configuring the network layer of Grisp boards has not yet been implemented and therefore needs the following manipulation to manually change the network layer on Grisp:
+
+In the existing `node` folder, you will need to change the `erl_main.c` located at `_build/default/lib/grisp/grisp/grisp_base/sys/`.
+
+After changing the file, run the following command :
+
+```
+rebar3 grisp build
+```
+
+The Grisp plugin for rebar will build the custom OTP version used in Grisp and will replace OTP's default version of `erl_main.c` with the file you previously modified.
+
+You can verify that your `erl_main.c` has been included in OTP's build by viewing the latter which is located at : `_grisp/otp/20.2/build/erts/emulator/sys/unix/erl_main.c`
