@@ -2,7 +2,9 @@
 
 % Add hosts
 {host, {169,254,16,93}, ["GrispAdhoc"]}.
-{host, {169,254,16,1}, ["my_grisp_board"]}.
+{host, {169,254,16,1}, ["my_grisp_board_1"]}.
+{host, {169,254,16,2}, ["my_grisp_board_2"]}.
+{host, {169,254,16,3}, ["my_grisp_board_3"]}.
 
 % Do not monitor the hosts file
 {hosts_file, ""}.
