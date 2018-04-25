@@ -11,6 +11,8 @@ start() ->
   node_supersup:start_link().
 
 start(all) ->
+  % MACADDR = inet:ifget("wlan0", [hwaddr]),
+  % io:format("MAC ADDR : ~p:~p:~p:~p:~p:~p ~n", MACADDR),
   io:format("Starting Partisan, Lasp and Node~n"),
   node_supersup:start_link(all).
 
