@@ -36,3 +36,21 @@ stop(_State) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+automatic_join() ->
+    List = [node@my_grisp_board_3],
+    Ping = fun(X) ->
+      net_adm:ping(X) == pong
+    end,
+    ListToJoin = lists:filter(Ping, List),
+    if length(ListToJoin) > 0 -> grisp_led:color(1,blue),automatic_join();
+        true -> grisp_led:color(1,red),automatic_join()
+      end.
+  %  Join = fun(X) ->
+  %    lasp_peer_service:join(X)
+  %  end,
+  %  lists:foreach(Join,ListToJoin),
+  %  io:format("list to join is ~p ~n",[ListToJoin]),
+  %List = [node@my_grisp_board,node@my_grisp_board_2,node@my_grisp_board_3,node@my_grisp_board_4,node@my_grisp_board_5],
+  %lists:foreach(Join,List),
+  %{ok,Members} = lasp_peer_service:members(),
+  %io:format("The list of nodes in members i ~p ~n",[Members]).
