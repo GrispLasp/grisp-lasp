@@ -37,7 +37,20 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 automatic_join() ->
-    List = [node@my_grisp_board_3],
+    % List = [node@my_grisp_board_3],
+    List = [node@my_grisp_board_1,
+    node@my_grisp_board_2,
+    node@my_grisp_board_3,
+    node@my_grisp_board_4,
+    node@my_grisp_board_5,
+    node@my_grisp_board_6,
+    node@my_grisp_board_7,
+    node@my_grisp_board_8,
+    node@my_grisp_board_9,
+    node@my_grisp_board_10,
+    node@my_grisp_board_11,
+    node@my_grisp_board_12,],
+    
     Ping = fun(X) ->
       net_adm:ping(X) == pong
     end,
