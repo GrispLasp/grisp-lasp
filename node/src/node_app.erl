@@ -30,7 +30,7 @@ start(_StartType, _StartArgs) ->
 %  grisp_led:pattern(1, [{100, Random}]),
   PeerConfig = lasp_partisan_peer_service:manager(),
   io:format("The manager used is ~p ~n",[PeerConfig]),
-  automatic_join([],5),
+  automatic_join([],2),
   Pid = spawn(client_sensor,init,[]),
   io:format("Creating sensor client at ~p ~n",[Pid]),
   {ok, Supervisor}.
@@ -49,7 +49,9 @@ automatic_join(PingList,N) when N > 0->
       net_adm:ping(X) == pong
     end,
     ListToJoin = lists:filter(Ping, ListWithoutSelf),
-    if length(ListToJoin) > length(PingList) -> grisp_led:flash(1, red, 500), automatic_join(ListToJoin,5);
+    if length(ListToJoin) > length(PingList) -> grisp_led:flash(1, red, 500),
+                                                io:format("The list of node to join is ~p ~n",[ListToJoin]),
+                                                automatic_join(ListToJoin,2);
         true ->  grisp_led:flash(1, blue, 500), automatic_join(ListToJoin,N-1)
       end;
 automatic_join(PingList,0) ->
