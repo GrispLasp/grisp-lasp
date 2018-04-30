@@ -42,7 +42,6 @@
 #include <grisp/pin-config.h>
 #include <grisp/led.h>
 #include <grisp/init.h>
-#include <grisp/eeprom.h>
 
 #define MNT "/media/mmcsd-0-0/"
 #define INI_FILE (MNT "grisp.ini")
@@ -59,7 +58,6 @@ const uint32_t atsam_matrix_ccfg_sysio = GRISP_MATRIX_CCFG_SYSIO;
 
 static int start_dhcp = 0;
 static int wlan_enable = 0;
-static int gw = 0;
 static char *ip_self = "";
 static char *hostname = "defaulthostname";
 
@@ -137,14 +135,9 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
         ok = 1;
       }
       else if (strcmp(name, "ip_self") == 0) {
-        if (strcmp(value, "dhcp") == 0) {
-            start_dhcp = 1;
-            ok = 1;
-        } else {
-          ip_self = strdup(value); // Set ip from ini file
-          printf("=== Ip is %s ===\n", ip_self);
-          ok = 1;
-        }
+        ip_self = strdup(value); // Set ip from ini file
+        printf("=== Ip is %s ===\n", ip_self);
+        ok = 1;
       }
       else if (strcmp(name, "wlan") == 0) {
         if (strcmp(value, "enable") == 0) {
@@ -153,16 +146,6 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
         }
         else if (strcmp(value, "disable") == 0) {
           wlan_enable = 0;
-          ok = 1;
-        }
-      }
-      else if (strcmp(name, "gw") == 0) {
-        if (strcmp(value, "true") == 0) {
-          gw = 1;
-          ok = 1;
-        }
-        else if (strcmp(value, "false") == 0) {
-          gw = 0;
           ok = 1;
         }
       }
@@ -238,67 +221,42 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
   create_wlandev(void)
   {
     int exit_code;
+    char *ifcfg_adhoc[] = {
+      "ifconfig",
+      "wlan0",
+      "create",
+      "wlandev",
+      "rtwn0",
+      "wlanmode",
+      "adhoc",
+      "up",
+      NULL
+    };
 
-    if (gw) {
-      	char *ifcfg_gw[] = {
-      		"ifconfig",
-      		"wlan0",
-      		"create",
-      		"wlandev",
-      		"rtwn0",
-      		"up",
-      		NULL
-      	};
+    char *ifcfg_adhoc_params[] = {
+      "ifconfig",
+      "wlan0",
+      "inet",
+      ip_self,
+      "netmask",
+      "255.255.0.0",
+      "ssid",
+      "adhocTest1",
+      NULL
+    };
 
-      	exit_code = rtems_bsd_command_ifconfig(RTEMS_BSD_ARGC(ifcfg_gw), ifcfg_gw);
-      	if(exit_code != EXIT_SUCCESS) {
-      		printf("ERROR while creating wlan0.");
-      	}
-    } else {
-      char *ifcfg_adhoc[] = {
-        "ifconfig",
-        "wlan0",
-        "create",
-        "wlandev",
-        "rtwn0",
-        "wlanmode",
-        "adhoc",
-        "up",
-        NULL
-      };
-
-      char *ifcfg_adhoc_params[] = {
-        "ifconfig",
-        "wlan0",
-        "inet",
-        ip_self,
-        "netmask",
-        "255.255.0.0",
-        "ssid",
-        "edge",
-        "mode",
-        "11n",
-        "channel",
-        "1",
-        NULL
-      };
-
-      printf("Creating GRISP wlan0 in adhoc mode \n");
-      exit_code = rtems_bsd_command_ifconfig(RTEMS_BSD_ARGC(ifcfg_adhoc), ifcfg_adhoc);
-      if(exit_code != EXIT_SUCCESS) {
-        printf("ERROR while creating wlan hostap.");
-      }
-
-      printf("Associating inet %s to hostname %s in edge SSID\n", ip_self, hostname);
-      rtems_task_wake_after(RTEMS_MILLISECONDS_TO_TICKS(4000));
-      exit_code = rtems_bsd_command_ifconfig(RTEMS_BSD_ARGC(ifcfg_adhoc_params), ifcfg_adhoc_params);
-      if(exit_code != EXIT_SUCCESS) {
-        printf("ERROR while configuring wlan0.");
-      }
-
+    printf("Creating GRISP wlan0 in adhoc mode \n");
+    exit_code = rtems_bsd_command_ifconfig(RTEMS_BSD_ARGC(ifcfg_adhoc), ifcfg_adhoc);
+    if(exit_code != EXIT_SUCCESS) {
+      printf("ERROR while creating wlan hostap.");
     }
 
-
+    printf("Creating GRISP adhoc subnet on GrispAdhoc ssid\n");
+    rtems_task_wake_after(RTEMS_MILLISECONDS_TO_TICKS(4000));
+    exit_code = rtems_bsd_command_ifconfig(RTEMS_BSD_ARGC(ifcfg_adhoc_params), ifcfg_adhoc_params);
+    if(exit_code != EXIT_SUCCESS) {
+      printf("ERROR while configuring wlan0.");
+    }
   }
 
   void parse_args(char *args)
@@ -351,19 +309,19 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
     printf("%s\n", erl_args);
     parse_args(erl_args);
 
-    if(start_dhcp) {
-        grisp_led_set2(false, true, true);
-        grisp_init_dhcpcd_with_config(PRIO_DHCP, DHCP_CONF_FILE);
-    }
+    // if(start_dhcp) {
+    //     grisp_led_set2(false, true, true);
+    //     grisp_init_dhcpcd_with_config(PRIO_DHCP, DHCP_CONF_FILE);
+    // }
     if (wlan_enable) {
       grisp_led_set2(false, true, true);
       rtems_task_wake_after(RTEMS_MILLISECONDS_TO_TICKS(4000));
       create_wlandev();
     }
-    if (wpa_supplicant_conf != NULL) {
-      grisp_led_set2(true, false, true);
-      grisp_init_wpa_supplicant(wpa_supplicant_conf, PRIO_WPA);
-    }
+    // if (wpa_supplicant_conf != NULL) {
+    //   grisp_led_set2(true, false, true);
+    //   grisp_init_wpa_supplicant(wpa_supplicant_conf, PRIO_WPA);
+    // }
     grisp_led_set2(false, true, false);
 
     printf("mkdir /tmp\n");
@@ -393,7 +351,7 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
     perror("can't chdir");
 
     printf("\nerl_main: starting ...\n");
-    printf("\nerl_main: starting CUSTOM ERL_MAIN.C ...\n");
+    printf("\nerl_main: starting custom erl_main.c ...\n");
 
 
     p = getcwd(pwd, 1024);
