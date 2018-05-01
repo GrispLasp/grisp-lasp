@@ -52,7 +52,7 @@ set_config() ->
   %% Note: Use app environments variables in config/sys.config instead
   partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
   % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager).
-  % partisan_config:set(peer_port, 6666).
+  partisan_config:set(peer_port, 50000),
   ok.
 
 start_link() ->
