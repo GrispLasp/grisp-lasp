@@ -25,10 +25,10 @@ init([]) ->
   SupFlags = #{strategy => one_for_all,
                intensity => 1,
                period => 20},
-  ChildSpecs = [#{id => my_sensor,
-                  start => {my_sensor, start_link, []},
+  ChildSpecs = [#{id => node_server,
+                  start => {node_server, start_link, [self()]},
                   restart => permanent,
                   type => worker,
                   shutdown => 5000,
-                  modules => [my_sensor]}],
+                  modules => [node_server]}],
   {ok, {SupFlags, ChildSpecs}}.

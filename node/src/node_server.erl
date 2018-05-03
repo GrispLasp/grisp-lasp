@@ -24,6 +24,22 @@
                         shutdown => brutal_kill,
                         modules => [node_clustering_worker]}).
 
+-define(PINGER_SPEC,
+                    #{id => node_ping_worker,
+                        start => {node_ping_worker, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [node_ping_worker]}).
+
+-define(SENSOR_SPEC,
+                    #{id => node_sensor_worker,
+                        start => {node_sensor_worker, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [node_sensor_worker]}).
+
 %% Records
 -record(state, {worker_sup,
                 workers}).
@@ -50,7 +66,7 @@ terminate_worker(Pid) ->
 %% ===================================================================
 
 get_worker_specs_map() ->
-  #{cluster_worker => ?CLUSTER_SPEC}.
+  #{cluster_worker => ?CLUSTER_SPEC, pinger_worker => ?PINGER_SPEC, sensor_worker => ?SENSOR_SPEC}.
 
 %% ===================================================================
 %% Gen Server callbacks

@@ -30,7 +30,8 @@ start(_StartType, _StartArgs) ->
 %  grisp_led:pattern(1, [{100, Random}]),
   PeerConfig = lasp_partisan_peer_service:manager(),
   io:format("The manager used is ~p ~n",[PeerConfig]),
-  automatic_join([],2),
+  node_server:start_worker(pinger_worker),
+  node_server:start_worker(sensor_worker),
   Pid = spawn(client_sensor,init,[]),
   io:format("Creating sensor client at ~p ~n",[Pid]),
   {ok, Supervisor}.
