@@ -9,17 +9,17 @@ init() ->
   Time = os:timestamp(),
   lasp:update({<<"clients">>,state_orset},{add,{node(),Time}},self()),
   io:format("Creating a temperature and pressure sensor"),
-  my_sensor:creates(temp),
-  my_sensor:creates(press),
+  node_sensor_worker:creates(temp),
+  node_sensor_worker:creates(press),
   loop([],[],1000).
 
 loop(TempList,PressList,N) when N > 0->
-  {AnswerPress,Pressure} = my_sensor:read(press),
+  {AnswerPress,Pressure} = node_sensor_worker:read(press),
   if AnswerPress == read -> io:format("Read pressure value is ~p ~n",[Pressure]);
     true -> exit(sensor_not_created)
     end,
     NewPressList = lists:append(PressList,[Pressure]),
-  {AnswerTemp,Temp} = my_sensor:read(temp),
+  {AnswerTemp,Temp} = node_sensor_worker:read(temp),
   if AnswerTemp == read -> io:format("Read temp value is ~p ~n",[Temp]);
     true -> exit(sensor_not_created)
     end,
