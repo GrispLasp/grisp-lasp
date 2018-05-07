@@ -1,4 +1,4 @@
--module(my_sensor).
+-module(node_sensor_worker).
 -author('Alex Carlier').
 -behaviour(gen_server).
 
