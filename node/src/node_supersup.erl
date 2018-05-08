@@ -50,8 +50,8 @@
 
 set_config() ->
   %% Note: Use app environments variables in config/sys.config instead
+  % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
   partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
-  % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager).
   partisan_config:set(peer_port, 50000),
   ok.
 
@@ -66,9 +66,6 @@ start_link(all) ->
 start_node() ->
   {ok, NodeSup} = supervisor:start_child(node, ?NODE_SPEC),
   {ok, NodeSup}.
-
-
-
 
 start_partisan() ->
   partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),

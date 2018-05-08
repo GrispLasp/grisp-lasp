@@ -1,4 +1,4 @@
--module(node_sensor_worker).
+-module(node_sensor_server_worker).
 -author('Alex Carlier').
 -behaviour(gen_server).
 
@@ -30,6 +30,8 @@ handle_call({creates, Sensor_type}, _From, SensorList) ->
       ok
   end,
   {reply, Response, NewSensorList};
+
+
 
 handle_call({read, Sensor_type}, _From, SensorList) ->
   Response = case lists:member(Sensor_type,SensorList) of

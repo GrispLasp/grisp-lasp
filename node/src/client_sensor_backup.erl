@@ -1,4 +1,4 @@
--module(client_sensor).
+-module(client_sensor_backup).
 -author('Alex Carlier').
 
 -export([init/0,loop/3]).
@@ -8,30 +8,30 @@ init() ->
   io:format("Adding node: ~p to the set clients ~n",[node()]),
   Time = os:timestamp(),
   lasp:update({<<"clients">>,state_orset},{add,{node(),Time}},self()),
-  io:format("Creating a temperature and pressure sensor"),
+  io:format("Creating a temperature and pressure sensor~n"),
   node_sensor_worker:creates(temp),
   node_sensor_worker:creates(press),
   loop([],[],1000).
 
 loop(TempList,PressList,N) when N > 0->
   {AnswerPress,Pressure} = node_sensor_worker:read(press),
-  if AnswerPress == read -> io:format("Read pressure value is ~p ~n",[Pressure]);
-    true -> exit(sensor_not_created)
-    end,
-    NewPressList = lists:append(PressList,[Pressure]),
+  NewPressList = case AnswerPress of
+    read -> lists:append(PressList,[Pressure]);
+    sensor_not_created -> exit(sensor_not_created)
+  end,
   {AnswerTemp,Temp} = node_sensor_worker:read(temp),
-  if AnswerTemp == read -> io:format("Read temp value is ~p ~n",[Temp]);
-    true -> exit(sensor_not_created)
-    end,
-    NewTempList = lists:append(TempList,[Temp]),
-    loop(NewTempList,NewPressList,N-1);
+  NewTempList = case AnswerTemp of
+    read ->  lists:append(TempList,[Temp]);
+    sensor_not_created -> exit(sensor_not_created)
+  end,
+  loop(NewTempList,NewPressList,N-1);
 
   loop(TempList,PressList,0) ->
     AverageTemp = average(TempList),
     AveragePress = average(PressList),
-    {ok, SetTemp} = lasp:update({<<"temp">>,state_orset},{add,AverageTemp},self()),
+    {ok, SetTemp} = lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp}},self()),
     io:format("After modifications the temp set is: ~p ~n",[lasp:query({<<"temp">>,state_orset})]),
-    {ok, SetPress} = lasp:update({<<"press">>,state_orset},{add,AveragePress},self()),
+    {ok, SetPress} = lasp:update({<<"press">>,state_orset},{add,{node(), AveragePress}},self()),
     io:format("After modifications the temp set is: ~p ~n",[lasp:query({<<"press">>,state_orset})]),
     grisp_led:color(2,blue),
     ok.

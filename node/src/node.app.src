@@ -5,9 +5,8 @@
     {mod, {node_app, []}},
     {applications, [
         kernel,
-        stdlib,
         grisp,
-        inets
+        stdlib
     ]},
     {env,[]},
     {modules, []},
