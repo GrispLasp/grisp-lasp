@@ -30,6 +30,8 @@ If the sources of the application's dependencies are not correctly included in t
 ```
 cd /path/to/project && rm -rdf {_build,_grisp}
 rebar3 unlock && rebar3 grisp build && rebar3 compile
+
+rm -rdf ~/.cache/rebar3/plugins/* && rm -rdf _build/grisp && rm -rdf _grisp && rebar3 unlock && rebar3 grisp build
 ```
 
 NOTE : when calling commands cp and rm on multiple targets such as {file1,file2,...}, the files must always be separated by commas that are never followed by spaces e.g. never {file1, file2, ...} otherwise the shell is unable to locate them.
