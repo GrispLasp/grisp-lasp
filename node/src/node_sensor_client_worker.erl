@@ -29,7 +29,7 @@ init([]) ->
   % lasp:update({<<"clients">>,state_orset},{add,{node(),Time}},self()),
   io:format("Creating a temperature sensor~n"),
   node_sensor_server_worker:creates(temp),
-  {ok, #state{counter=0, temps=[]}, 10000}.
+  {ok, #state{counter=0, temps=[]}, 30000}.
 
 handle_call(stop, _From, State) ->
 {stop, normal, ok, State}.
@@ -38,7 +38,7 @@ handle_info(timeout, S = #state{counter=Counter, temps=Temps}) ->
     io:format("=== Counter is at ~p ===~n", [Counter]),
     io:format("=== Temp list : ~p ===~n",[Temps]),
     {NewCounter, NewTempList} = case Counter of
-      10 ->
+      20 ->
         io:format("=== Timer has ended, aggregating data and updating CRDT... === ~n"),
         AverageTemp = average(Temps),
         io:format("=== Average temp in past hour is ~p ===~n", [AverageTemp]),
@@ -67,7 +67,7 @@ handle_info(timeout, S = #state{counter=Counter, temps=Temps}) ->
         {Counter+1, TempList}
     end,
 
-    {noreply, S#state{counter=NewCounter, temps=NewTempList}, 10000};
+    {noreply, S#state{counter=NewCounter, temps=NewTempList}, 30000};
 
 handle_info(Msg, State) ->
     io:format("=== Unknown message: ~p~n", [Msg]),

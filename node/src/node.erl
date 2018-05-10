@@ -35,7 +35,8 @@ stop_server() ->
 start_all_workers() ->
   node_server:start_worker(pinger_worker),
   node_server:start_worker(sensor_server_worker),
-  node_server:start_worker(sensor_client_worker).
+  node_server:start_worker(sensor_client_worker),
+  node_server:start_worker(generic_worker).
 
 start_worker(WorkerType) ->
   node_server:start_worker(WorkerType).

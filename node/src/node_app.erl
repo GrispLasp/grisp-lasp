@@ -27,8 +27,9 @@ start(_StartType, _StartArgs) ->
   PeerConfig = lasp_partisan_peer_service:manager(),
   io:format("The manager used is ~p ~n",[PeerConfig]),
   node_server:start_worker(pinger_worker),
-  node_server:start_worker(sensor_server_worker),
-  node_server:start_worker(sensor_client_worker),
+  node_server:start_worker(generic_worker),
+  % node_server:start_worker(sensor_server_worker),
+  % node_server:start_worker(sensor_client_worker),
   % node:start_all_workers(),
   {ok, Supervisor}.
 
