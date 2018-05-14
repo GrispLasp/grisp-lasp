@@ -1,3 +1,6 @@
 [submodule "DissertationDraft"]
 	path = DissertationDraft
 	url = https://git.overleaf.com/15792877ptrmffkkrbbc
+[submodule "Dissertation"]
+	path = Dissertation
+	url = https://git.overleaf.com/16203742gcqdcymdhfxf
