@@ -230,6 +230,8 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
       "wlanmode",
       "adhoc",
       "up",
+      "channel",
+      "6",
       NULL
     };
 
@@ -241,7 +243,7 @@ static int ini_file_handler(void *arg, const char *section, const char *name,
       "netmask",
       "255.255.0.0",
       "ssid",
-      "GrispAdhoc",
+      "edge",
       NULL
     };
 
