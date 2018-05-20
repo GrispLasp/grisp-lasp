@@ -40,3 +40,7 @@ To Add + Commit + Push your changes to the submodule
 
 ## GitKraken Glo
 Install the `gitkraken-glo` package from the Atom marketplace to start using [Glo](https://atom.io/packages/gitkraken-glo/) :octocat: as an embedded tab in Atom. Accept the invitations that you have received by mail for the GrispLasp board and you are now able to manage cards and workflow that is synced with the GrispLasp repository and DissertationDraft submodule. Features such as issues, assignment, etc. are directly available inside the Atom tab and published to GitHub according to cards :muscle: :muscle:.  
+
+
+## Zotero + Atom 
+A [Readme](https://github.com/Laymer/ZoteroAtomSetup) is available in order to integrate Zotero citations directly into Atom.
