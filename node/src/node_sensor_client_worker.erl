@@ -8,7 +8,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% Records
--record(state, {counter, temps}).
+-record(state, {counter, temps, ranges}).
 
 %% ===================================================================
 %% API functions
@@ -27,17 +27,23 @@ init([]) ->
   % io:format("Adding node: ~p to the set clients ~n",[node()]),
   % Time = os:timestamp(),
   % lasp:update({<<"clients">>,state_orset},{add,{node(),Time}},self()),
+  % io:format("Creating a MAXSonar sensor~n"),
+  % node_sensor_server_worker:creates(pmod_maxsonar),
+  io:format("Creating an ACL sensor~n"),
+  node_sensor_server_worker:creates(pmod_acl2),
+  timer:sleep(15000),
   io:format("Creating a temperature sensor~n"),
   node_sensor_server_worker:creates(temp),
-  {ok, #state{counter=0, temps=[]}, 30000}.
+  {ok, #state{counter=0, temps=[], ranges=[]}, 30000}.
 
 handle_call(stop, _From, State) ->
 {stop, normal, ok, State}.
 
-handle_info(timeout, S = #state{counter=Counter, temps=Temps}) ->
+handle_info(timeout, S = #state{counter=Counter, temps=Temps, ranges=Ranges}) ->
     io:format("=== Counter is at ~p ===~n", [Counter]),
     io:format("=== Temp list : ~p ===~n",[Temps]),
-    {NewCounter, NewTempList} = case Counter of
+    io:format("=== Ultrasonic Ranges list : ~p ===~n",[Ranges]),
+    {NewCounter, NewTempList, NewRangeList} = case Counter of
       20 ->
         io:format("=== Timer has ended, aggregating data and updating CRDT... === ~n"),
         AverageTemp = average(Temps),
@@ -64,10 +70,15 @@ handle_info(timeout, S = #state{counter=Counter, temps=Temps}) ->
           read ->  lists:append(Temps,[Temp]);
           sensor_not_created -> exit(sensor_not_created)
         end,
-        {Counter+1, TempList}
+        {AnswerRange,Range} = node_sensor_server_worker:read(pmod_maxsonar),
+        RangeList = case AnswerRange of
+          read ->  lists:append(Ranges,[Range]);
+          sensor_not_created -> exit(sensor_not_created)
+        end,
+        {Counter+1, TempList, RangeList}
     end,
 
-    {noreply, S#state{counter=NewCounter, temps=NewTempList}, 30000};
+    {noreply, S#state{counter=NewCounter, temps=NewTempList, ranges=NewRangeList}, 30000};
 
 handle_info(Msg, State) ->
     io:format("=== Unknown message: ~p~n", [Msg]),

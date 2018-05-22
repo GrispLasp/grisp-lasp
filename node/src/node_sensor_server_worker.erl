@@ -27,6 +27,15 @@ handle_call({creates, Sensor_type}, _From, SensorList) ->
     false ->
       % create a sensor of type Sensor_type
       NewSensorList = lists:append([Sensor_type], SensorList),
+      case Sensor_type of
+        pmod_maxsonar ->
+          % {ok, Supervisor} = pmod_maxsonar:start_link(uart)
+          application:set_env(grisp, devices, [{uart, pmod_maxsonar}]),
+          {ok, _} = pmod_maxsonar:start_link(uart);
+        pmod_acl2 ->
+          application:set_env(grisp, devices, [{spi1, pmod_acl2}]),
+          spawn_link(fun() -> process() end)
+      end,
       ok
   end,
   {reply, Response, NewSensorList};
@@ -59,5 +68,17 @@ readSensor(Sensor_type) ->
   case Sensor_type of
     temp -> math:floor(rand:uniform()*30);
     press -> rand:uniform();
+    pmod_maxsonar -> pmod_maxsonar:get();
     _ -> {this_type_of_sensor_was_not_created}
   end.
+
+
+process() ->
+    {X, Y, Z} = pmod_acl2:g(),
+    Color = {color(X), color(Y), color(Z)},
+    grisp_led:color(1, Color),
+    grisp_led:color(2, Color),
+    timer:sleep(10),
+    process().
+
+color(Val) -> trunc((abs(Val) / 2.0) + 0.8) rem 2.
