@@ -27,7 +27,7 @@
 % @private
 start_link(Slot, _Opts) ->
     gen_server:start_link(?MODULE, Slot, []).
-    
+
 read_gyro() ->
  Result = call(gyro),
 Result.
@@ -47,11 +47,11 @@ init(Slot) ->
     {ok, #state{slot = Slot}}.
 
 % @private
-handle_call(temp, From, State) -> 
+handle_call(temp, From, State) ->
   Result = get_temp(State#state.slot),
   {reply,{ok,Result},State};
-  
-handle_call(gyro, From, State) -> 
+
+handle_call(gyro, From, State) ->
   Result = get_gyro(State#state.slot),
   {reply,{ok,Result},State}.
 
@@ -83,5 +83,4 @@ Result.
 
 get_gyro(Slot) ->
 Result = grisp_spi:send_recv(Slot, #{cpol => high, cpha => trailing}, <<1:1, 1:1, 16#28:6>>, 1, 6),
-Result.    
-
+Result.

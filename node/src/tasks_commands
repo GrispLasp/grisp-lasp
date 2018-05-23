@@ -1,0 +1,7 @@
+node_generic_tasks_server:add_task({task1, all, fun () -> 200+200 end }).
+node_generic_tasks_server:add_task({task2, all, fun () -> 4+4 end }).
+node_generic_tasks_server:get_all_tasks().
+node_generic_tasks_server:remove_all_tasks().
+node_generic_tasks_server:remove_task(task1).
+lasp:query({<<"tasks">>, state_orset}).
+node_generic_tasks_worker:find_and_start_task().
