@@ -10,6 +10,8 @@
 
 %% Macros
 
+
+
 -define(PARTISAN_SPEC,
                     #{id => partisan_sup,
                         start => {partisan_sup, start_link, []},
@@ -34,13 +36,23 @@
 %                        shutdown => 15000,
 %                        modules => [lasp_pg_sup]}).
 
+
+-define(SENSORS_SETUP, true).
+-ifdef(SENSORS_SETUP).
+-define(PMOD_ALS(Slot), {Slot, pmod_als}).
+-define (SENSORS, [{sensors, [?PMOD_ALS(spi2)]}]).
+-else.
+-define (SENSORS, []).
+-endif.
+
 -define(NODE_SPEC,
-                    #{id => node_sup,
-                        start => {node_sup, start_link, []},
-                        restart => permanent,
-                        type => supervisor,
-                        shutdown => 15000,
-                        modules => [node_sup]}).
+                      #{id => node_sup,
+                      start => {node_sup, start_link, ?SENSORS},
+                      restart => permanent,
+                      type => supervisor,
+                      shutdown => 15000,
+                      modules => [node_sup]}).
+
 
 
 %% ===================================================================
@@ -59,9 +71,9 @@ start_link() ->
   % set_config(),
   supervisor:start_link({local, node}, ?MODULE, []).
 
-start_link(all) ->
-  set_config(),
-  supervisor:start_link({local, node}, ?MODULE, all).
+start_link(Args) ->
+  % set_config(),
+  supervisor:start_link({local, node}, ?MODULE, Args).
 
 start_node() ->
   {ok, NodeSup} = supervisor:start_child(node, ?NODE_SPEC),
@@ -112,6 +124,12 @@ init([]) ->
 % Order of children start is respected
 init(all) ->
     SupFlags = #{strategy => rest_for_one,
-                 intensity => 1,
-                 period => 20},
-    {ok,  {SupFlags, [?PARTISAN_SPEC, ?LASP_SPEC, ?NODE_SPEC]}}.
+                intensity => 1,
+                period => 20},
+    {ok,  {SupFlags, [?PARTISAN_SPEC, ?LASP_SPEC, ?NODE_SPEC]}};
+
+init(node) ->
+    SupFlags = #{strategy => one_for_one,
+                intensity => 1,
+                period => 10},
+    {ok,  {SupFlags, [?NODE_SPEC]}}.

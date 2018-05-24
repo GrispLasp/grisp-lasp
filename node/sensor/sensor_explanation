@@ -14,6 +14,7 @@ To test if it works try the pmod_gyro.erl put it in grisp/src instead of the one
 plug in the gyro sensor on the 12 pin spi1.
 Then run:
 application:set_env(grisp, devices, [{spi1, pmod_gyro}]).
+application:set_env(grisp, devices, [{spi2, pmod_als}]).
 grisp_devices:setup().
 pmod_gyro:read_gyro().
 pmod_gyro:read_temp().

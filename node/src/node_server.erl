@@ -3,6 +3,7 @@
 
 %% API
 -export([start_link/1, start_worker/1, terminate_worker/1, stop/0]).
+-export([start_link/2]).
 
 %% Gen Server Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -48,6 +49,14 @@
                         shutdown => brutal_kill,
                         modules => [node_generic_server_worker]}).
 
+-define(PMOD_ALS_WORKER_SPEC,
+                    #{id => pmod_als_worker,
+                        start => {pmod_als_worker, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [pmod_als_worker]}).
+
 
 %% Records
 -record(state, {worker_sup,
@@ -60,6 +69,9 @@
 
 start_link(NodeSup) ->
   gen_server:start_link({local, node_server}, ?MODULE, {NodeSup}, []).
+
+start_link(NodeSup, Sensors) ->
+  gen_server:start_link({local, node_server}, ?MODULE, {NodeSup, Sensors}, []).
 
 stop() ->
   gen_server:call(node_server, stop).
@@ -75,18 +87,33 @@ terminate_worker(Pid) ->
 %% ===================================================================
 
 get_worker_specs_map() ->
-  #{generic_worker => ?GENERIC_SERVER_SPEC, pinger_worker => ?PINGER_SPEC, sensor_server_worker => ?SENSOR_SERVER_SPEC, sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
+  #{generic_worker => ?GENERIC_SERVER_SPEC,
+  pinger_worker => ?PINGER_SPEC,
+  sensor_server_worker => ?SENSOR_SERVER_SPEC,
+  pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
+  sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
 
 %% ===================================================================
 %% Gen Server callbacks
 %% ===================================================================
 
 
-init({NodeSup}) ->
+init(NodeSup) ->
     io:format("Initializing Node Server~n"),
     process_flag(trap_exit, true), %% Ensure Gen Server gets notified when his supervisor dies
-    self() ! {start_worker_supervisor, NodeSup},
+    case NodeSup of
+      {Supervisor} ->
+        self() ! {start_worker_supervisor, Supervisor};
+      {Supervisor, _Sensors} ->
+        self() ! {start_worker_supervisor, Supervisor}
+    end,
     {ok, #state{workers=gb_sets:empty()}}.
+
+% init({NodeSup, Sensors}) ->
+%     io:format("Initializing Node Server with ALS worker~n"),
+%     process_flag(trap_exit, true), %% Ensure Gen Server gets notified when his supervisor dies
+%     self() ! {start_worker_supervisor, NodeSup},
+%     {ok, #state{workers=gb_sets:empty()}}.
 
 
 handle_call({start_worker, WorkerType}, _From, S = #state{worker_sup=WorkerSup, workers=W}) ->
