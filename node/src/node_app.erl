@@ -32,8 +32,10 @@ start(_StartType, _StartArgs) ->
   node_server:start_worker(generic_tasks_server),
   timer:sleep(15000),
   node_server:start_worker(generic_tasks_worker),
+  timer:sleep(15000),
+  node_server:start_worker(sensor_server_worker),
+  node_sensor_server_worker:creates(temp),
 
-  % node_server:start_worker(sensor_server_worker),
   % node_server:start_worker(sensor_client_worker),
   % node:start_all_workers(),
   {ok, Supervisor}.
