@@ -36,6 +36,13 @@ start(_StartType, _StartArgs) ->
   ?PAUSE10,
   ?PAUSE10,
   node_server:start_worker(pinger_worker),
+  timer:sleep(15000),
+  node_server:start_worker(generic_tasks_server),
+  timer:sleep(15000),
+  node_server:start_worker(generic_tasks_worker),
+  timer:sleep(15000),
+  node_server:start_worker(sensor_server_worker),
+  node_sensor_server_worker:creates(temp),
   ?PAUSE10,
   % node_server:start_worker(generic_tasks_server),
   % ?PAUSE10,
@@ -46,6 +53,8 @@ start(_StartType, _StartArgs) ->
   ?PAUSE10,
   grisp:add_device(uart, pmod_maxsonar),
 
+  % node_server:start_worker(sensor_client_worker),
+  % node:start_all_workers(),
   ?PAUSE10,
   grisp:add_device(spi1, pmod_gyro),
 

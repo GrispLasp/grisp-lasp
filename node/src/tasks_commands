@@ -5,3 +5,8 @@ node_generic_tasks_server:remove_all_tasks().
 node_generic_tasks_server:remove_task(task1).
 lasp:query({<<"tasks">>, state_orset}).
 node_generic_tasks_worker:find_and_start_task().
+node_generic_tasks_worker:start_all_tasks().
+
+
+node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 15000) end }).
+node_generic_tasks_worker:start_task(task1).

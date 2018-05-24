@@ -78,7 +78,14 @@ handle_call({find_task, TaskName}, _From, State) ->
   {ok, Tasks} = lasp:query({<<"tasks">>, state_orset}),
   TasksList = sets:to_list(Tasks),
   Task = [{Name, Targets, Fun} || {Name, Targets, Fun} <- TasksList, Name =:= TaskName],
-  {reply, Task, State};
+  case length(Task) of
+    0 ->
+      {reply, task_not_found, State};
+    1 ->
+      {reply, {ok, hd(Task)}, State};
+    _ ->
+      {reply, more_than_one_task, State}
+  end;
 
 handle_call(stop, _From, State) ->
   {stop, normal, ok, State}.

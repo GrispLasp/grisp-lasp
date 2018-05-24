@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, find_and_start_task/0, stop/0]).
+-export([start_link/0, find_and_start_task/0, start_task/1, start_all_tasks/0, isRunning/1, stop/0]).
 
 %% Gen Server Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -19,8 +19,17 @@
 start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, {}, []).
 
+start_task(Name) ->
+  gen_server:call(?MODULE, {start_task, Name}).
+
 find_and_start_task() ->
   gen_server:call(?MODULE, {find_and_start_task}).
+
+start_all_tasks() ->
+  gen_server:call(?MODULE, {start_all_tasks}).
+
+isRunning(TaskName) ->
+  gen_server:call(?MODULE, {isRunning, TaskName}).
 
 stop() ->
   gen_server:call(?MODULE, stop).
@@ -40,8 +49,55 @@ init({}) ->
     {ok, #state{running_tasks=[], finished_tasks=[]}}.
 
 
-handle_call({find_and_start_task}, _From, S = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
-    io:format("=== State is ~p ===~n", [S]),
+
+handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+    io:format("=== State is ~p ===~n", [State]),
+    io:format("=== Finding task ~p ===~n", [Name]),
+    Task = node_generic_tasks_server:find_task(Name),
+    case Task of
+      {ok, TaskFound} ->
+        NewFinishedTasksList = FinishedTasks -- [TaskFound],
+        TaskFun = element(3,TaskFound),
+        io:format("=== Task chosen ~p ===~n", [TaskFound]),
+        {Pid, Ref} = spawn_monitor(TaskFun),
+        io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
+        RunningTask = erlang:insert_element(4, TaskFound, {Pid, Ref}),
+        io:format("=== Running Task ~p ===~n", [RunningTask]),
+        {reply, RunningTask,  State#state{running_tasks=RunningTasks ++ [RunningTask], finished_tasks=NewFinishedTasksList}};
+      Error ->
+        {reply, Error, State}
+    end;
+
+
+handle_call({start_all_tasks}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+    io:format("=== State is ~p ===~n", [State]),
+    io:format("=== Finding new task ===~n"),
+    TasksList = node_generic_tasks_server:get_all_tasks(),
+    io:format("=== Tasks list ~p ===~n", [TasksList]),
+    FilteredTaskList = filter_task_list(TasksList, RunningTasks),
+    case length(FilteredTaskList) of
+      0 ->
+        {reply, no_tasks_to_run, State};
+      _ ->
+        NewFinishedTasksList = FinishedTasks -- FilteredTaskList,
+        StartedTasks = lists:map(
+          fun(Task) ->
+            TaskFun = element(3,Task),
+            io:format("=== Task chosen ~p ===~n", [Task]),
+            {Pid, Ref} = spawn_monitor(TaskFun),
+            io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
+            RunningTask = erlang:insert_element(4, Task, {Pid, Ref}),
+            io:format("=== Running Task ~p ===~n", [RunningTask]),
+            RunningTask
+          end
+        , FilteredTaskList),
+        {reply, StartedTasks, State#state{running_tasks=RunningTasks ++ StartedTasks, finished_tasks=NewFinishedTasksList}}
+    end;
+
+
+
+handle_call({find_and_start_task}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+    io:format("=== State is ~p ===~n", [State]),
     io:format("=== Finding new task ===~n"),
     TasksList = node_generic_tasks_server:get_all_tasks(),
     io:format("=== Tasks list ~p ===~n", [TasksList]),
@@ -49,44 +105,49 @@ handle_call({find_and_start_task}, _From, S = #state{running_tasks=RunningTasks,
     io:format("=== FilteredTaskList ~p ===~n",[FilteredTaskList]),
     case length(FilteredTaskList) of
       0 ->
-        {reply, {no_tasks_to_run}, S};
+        {reply, no_tasks_to_run, State};
       _ ->
         RandomTaskIndex = rand:uniform(length(FilteredTaskList)),
         RandomTask = lists:nth(RandomTaskIndex, FilteredTaskList),
-        NewFinishedTasksList = case lists:member(RandomTask, FinishedTasks) of
-          true ->
-            lists:delete(RandomTask, FinishedTasks);
-          false ->
-            FinishedTasks
-        end,
+        NewFinishedTasksList = FinishedTasks -- [RandomTask],
         TaskFun = element(3,RandomTask),
         io:format("=== Task chosen ~p ===~n", [RandomTask]),
         {Pid, Ref} = spawn_monitor(TaskFun),
         io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
         RunningTask = erlang:insert_element(4, RandomTask, {Pid, Ref}),
         io:format("=== Running Task ~p ===~n", [RunningTask]),
-        {reply, RunningTask, S#state{running_tasks=RunningTasks ++ [RunningTask], finished_tasks=NewFinishedTasksList}}
+        {reply, RunningTask, State#state{running_tasks=RunningTasks ++ [RunningTask], finished_tasks=NewFinishedTasksList}}
+  end;
+
+
+handle_call({isRunning, TaskName}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=_}) ->
+  TaskRunning = [{Name, Targets, Fun, {TaskPid, TaskRef}} || {Name, Targets, Fun, {TaskPid, TaskRef}} <- RunningTasks, Name =:= TaskName],
+  case length(TaskRunning) of
+    0 -> {reply, false, State};
+    1 -> {reply, true, State};
+    _ -> {reply, more_than_one_task, State}
   end;
 
 
 
-handle_call(stop, _From, S) ->
-  {stop, normal, ok, S};
 
-handle_call(_Msg, _From, S) ->
-  {noreply, S}.
+handle_call(stop, _From, State) ->
+  {stop, normal, ok, State};
 
-handle_cast(_Msg, S) ->
-  {noreply, S}.
+handle_call(_Msg, _From, State) ->
+  {noreply, State}.
+
+handle_cast(_Msg, State) ->
+  {noreply, State}.
 
 
-handle_info({'DOWN', Ref, process, Pid, Info}, S = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
-
+handle_info({'DOWN', Ref, process, Pid, Info}, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+    io:format("== Pid ~p has ended ===~n", [Pid]),
     RunningTasksList = [{Name, Targets, Fun, {TaskPid, TaskRef}} || {Name, Targets, Fun, {TaskPid, TaskRef}} <- RunningTasks, TaskPid =:= Pid],
     case length(RunningTasksList) of
       0 ->
         io:format("=== A process other than a task finished ===~n"),
-        {noreply, S};
+        {noreply, State};
       1 ->
         {Name, Targets, Fun, {TaskPid, TaskRef}} = hd(RunningTasksList),
         case Info of
@@ -97,31 +158,31 @@ handle_info({'DOWN', Ref, process, Pid, Info}, S = #state{running_tasks=RunningT
         NewRunningTasksList = lists:delete({Name, Targets, Fun, {TaskPid, TaskRef}}, RunningTasks),
         NewFinishedTasksList = lists:append(FinishedTasks, [{Name, Targets, Fun}]),
         io:format("=== NRTL ~p , NFTL ~p ===~n", [NewRunningTasksList, NewFinishedTasksList]),
-        {noreply, S#state{running_tasks=NewRunningTasksList, finished_tasks=NewFinishedTasksList}}
+        {noreply, State#state{running_tasks=NewRunningTasksList, finished_tasks=NewFinishedTasksList}}
     end;
 
-handle_info({'EXIT', _From, Reason}, S) ->
+handle_info({'EXIT', _From, Reason}, State) ->
     io:format("=== Supervisor sent an exit signal (reason: ~p), terminating Gen Server ===~n", [Reason]),
-    {stop, Reason, S};
+    {stop, Reason, State};
 
-handle_info(Msg, S) ->
+handle_info(Msg, State) ->
   io:format("=== Unknown message: ~p~n", [Msg]),
-  {noreply, S}.
+  {noreply, State}.
 
-terminate(normal, _S) ->
+terminate(normal, _State) ->
   io:format("=== Normal Gen Server termination ===~n"),
   ok;
 
-terminate(shutdown, _S) ->
+terminate(shutdown, _State) ->
   io:format("=== Supervisor asked to terminate Gen Server (reason: shutdown) ===~n"),
   ok;
 
-terminate(Reason, _S) ->
+terminate(Reason, _State) ->
   io:format("=== Terminating Gen Server (reason: ~p) ===~n",[Reason]),
   ok.
 
-code_change(_OldVsn, S, _Extra) ->
-  {ok, S}.
+code_change(_OldVsn, State, _Extra) ->
+  {ok, State}.
 
 
 %%====================================================================
