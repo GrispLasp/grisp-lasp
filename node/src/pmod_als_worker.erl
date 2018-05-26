@@ -9,14 +9,19 @@
 
 %% Records
 -define(PMOD_ALS_RANGE, lists:seq(1, 255, 1) ).
--define(LUMINOSITY_LEVELS, [dark, shady, medium, bright, luminous] ).
--define(LUMINOSITY_MAP, [lists:duplicate(51,X) || X <- ?LUMINOSITY_LEVELS ]).
+% -define(LUMINOSITY_LEVELS, [dark, shady, medium, bright, luminous] ).
+% -define(LUMINOSITY_MAP, [lists:duplicate(51,X) || X <- ?LUMINOSITY_LEVELS ]).
 
 -record(shade, {
     measurements = [],
     count = 0,
-    spectrum_key
+    avg = 0
 }).
+% -record(shade, {
+%     measurements = [],
+%     count = 0,
+%     spectrum_key
+% }).
 
 -record(state, {
   luminosity = []
@@ -55,14 +60,26 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 init([]) ->
   io:format("Starting ambient light worker ~n"),
   application:set_env(grisp, devices, [{spi2, pmod_als}]),
+  Shades = lists:duplicate(255, #shade{}),
+  Range = lists:seq(1, 255, 1),
+  List = lists:zipwith(fun
+    (X,Y) ->
+      {X, Y}
+  end, Range, Shades),
+  Dict = dict:from_list(List),
   State = #state{
-    luminosity = dict:from_list(lists:zipwith(fun
-      (Spectrum, Label) when is_record(Spectrum, shade) ->
-        {Spectrum, Label}
-    end, [#shade{spectrum = lists:sublist(?PMOD_ALS_RANGE, X, 51)} || X <- lists:seq(1,length(?PMOD_ALS_RANGE),51)], ?LUMINOSITY_LEVELS))
+      luminosity = Dict
   },
-
-  io:format("Keys = ~p ~n", lists:keyfind()[dict:fetch_keys(State#state.luminosity)]),
+  % State = #state{
+  %   luminosity = dict:from_list(lists:zipwith(fun
+  %     (Key, Shade) when is_record(Shade, shade) ->
+  %       {Key, Shade}
+  %   % end, [#shade{spectrum = lists:sublist(?PMOD_ALS_RANGE, X, 51)} || X <- lists:seq(1,length(?PMOD_ALS_RANGE),51)], lists:duplicate(255, #state{}) ))
+  % end, ?PMOD_ALS_RANGE, lists:duplicate(255, #state{}) ))},
+  % [{X, #shade{}} || X <- ]
+  % State = #state{
+  %     luminosity = dict:from_list()
+  % }
   grisp_devices:setup(),
   % {ok, {#state{}}, 20000}.
   {ok, State, 20000}.
@@ -99,8 +116,11 @@ handle_call(stop, _From, State) ->
 
 
 handle_info(timeout, State) ->
-    % Raw = pmod_als:raw(),
-
+    Raw = pmod_als:raw(),
+    % Shade = dict:fetch(Raw, State#state.luminosity),
+    % dict:update(Raw, fun(Shade) -> #shade{measurements = Shade#shade.measurements ++ [Raw], count = Shade#shade.count + 1})
+    io:format("Raw = ~p ~n", [Raw]),
+    dict:update(Raw, fun(Shade) -> #shade{measurements = Shade#shade.measurements ++ [Raw], count = Shade#shade.count + 1} end, State#state.luminosity),
     % dict:update(State#state{spectrum = lists}, fun (Old) -> Old ++ [Val] end, [Val], D),
   %   dict:to_list(
   % 	dict:append(item, value,
