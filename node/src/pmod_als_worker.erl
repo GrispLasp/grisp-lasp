@@ -60,6 +60,7 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 init([]) ->
   io:format("Starting ambient light worker ~n"),
   application:set_env(grisp, devices, [{spi2, pmod_als}]),
+  application:set_env(grisp, devices, [{uart, pmod_maxsonar}]),
   Shades = lists:duplicate(255, #shade{}),
   Range = lists:seq(1, 255, 1),
   List = lists:zipwith(fun
@@ -117,9 +118,11 @@ handle_call(stop, _From, State) ->
 
 handle_info(timeout, State) ->
     Raw = pmod_als:raw(),
+    Sonar = pmod_maxsonar:get(),
     % Shade = dict:fetch(Raw, State#state.luminosity),
     % dict:update(Raw, fun(Shade) -> #shade{measurements = Shade#shade.measurements ++ [Raw], count = Shade#shade.count + 1})
     io:format("Raw = ~p ~n", [Raw]),
+    io:format("Raw Sonar = ~p ~n", [Sonar]),
     dict:update(Raw, fun(Shade) -> #shade{measurements = Shade#shade.measurements ++ [Raw], count = Shade#shade.count + 1} end, State#state.luminosity),
     % dict:update(State#state{spectrum = lists}, fun (Old) -> Old ++ [Val] end, [Val], D),
   %   dict:to_list(
@@ -138,7 +141,7 @@ handle_info(timeout, State) ->
     % end
     % store_ambient_light(State#state.luminosity),
     % io:format("=== ALS raw value = ~p ~n", [Raw]),
-    {noreply, State, 1000};
+    {noreply, State, 3000};
 
 handle_info(Msg, State) ->
     io:format("=== Unknown message: ~p~n", [Msg]),
