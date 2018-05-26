@@ -39,20 +39,34 @@ init(Slot = uart) ->
 handle_call(get_value, _From, #state{last_val = Val} = State) ->
     {reply, Val, State}.
 
+%handle_call({get_value,Req}, _From, #state{last_val = Val} = State) ->
+%  Data = grisp_termios:send_recv(Req),
+%  case Data of
+%      <<_, _, D1, D2, D3, 10>> when $0 =< D1, D1 =< $9,
+%                                    $0 =< D2, D2 =< $9,
+%                                    $0 =< D3, D3 =< $9 ->
+%          Val = (D1 - $0) * 100 + (D2 - $0) * 10 + (D3 - $0),
+%          {reply,Data, State#state{last_val = Val}};
+%      _ ->
+%          {reply,Data, State}
+%  end.
+
 % @private
 handle_cast(Request, _State) -> error({unknown_cast, Request}).
 
 % @private
 handle_info({Port, {data, Data}}, #state{port = Port} = State) ->
-    case Data of
-        <<_, _, D1, D2, D3, 10>> when $0 =< D1, D1 =< $9,
-                                      $0 =< D2, D2 =< $9,
-                                      $0 =< D3, D3 =< $9 ->
-            Val = (D1 - $0) * 100 + (D2 - $0) * 10 + (D3 - $0),
-            {noreply, State#state{last_val = Val}};
-        _ ->
-            {noreply, State}
-    end.
+  {noreply, State#state{last_val = Data}}.
+  %  case Data of
+  %      <<_, _, D1, D2, D3, 10>> when $0 =< D1, D1 =< $9,
+  %                                    $0 =< D2, D2 =< $9,
+  %                                    $0 =< D3, D3 =< $9 ->
+  %          Val = (D1 - $0) * 100 + (D2 - $0) * 10 + (D3 - $0),
+  %          {noreply, State#state{last_val = Val}};
+  %      _ ->
+  %        io:format("Wrong case ~n"),
+  %          {noreply, State}
+  %  end.
 
 
 
