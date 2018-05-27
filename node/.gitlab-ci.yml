@@ -1,6 +1,12 @@
 image: erlang:20.2
 
+stages:
+  - build
+  - test
+  - deploy
+
 test:
+  stage: build
   script:
     - cd node/
     - ../deps/rebar3 compile
