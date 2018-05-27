@@ -37,7 +37,7 @@
 %                        modules => [lasp_pg_sup]}).
 
 
--define(SENSORS_SETUP, true).
+% -define(SENSORS_SETUP, true).
 -ifdef(SENSORS_SETUP).
 -define(PMOD_ALS(Slot), {Slot, pmod_als}).
 -define (SENSORS, [{sensors, [?PMOD_ALS(spi2)]}]).
