@@ -57,6 +57,14 @@
                         shutdown => brutal_kill,
                         modules => [pmod_als_worker]}).
 
+-define(NODE_STREAM_WORKER_SPEC,
+                    #{id => node_stream_worker,
+                        start => {node_stream_worker, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [node_stream_worker]}).
+
 
 %% Records
 -record(state, {worker_sup,
@@ -91,6 +99,7 @@ get_worker_specs_map() ->
   pinger_worker => ?PINGER_SPEC,
   sensor_server_worker => ?SENSOR_SERVER_SPEC,
   pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
+  node_stream_worker => ?NODE_STREAM_WORKER_SPEC,
   sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
 
 %% ===================================================================
