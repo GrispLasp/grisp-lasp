@@ -2,10 +2,11 @@ image: erlang:20.2
 
 test:
   script:
-    - ./node/rebar3 compile
-  cache:
-    paths:
-    - node/_build
+    - cd node/
+    - ../deps/rebar3 compile
+  # cache:
+  #   paths:
+  #   - node/_build
     # - deps/lz4
     # - deps/rocksdb
 
