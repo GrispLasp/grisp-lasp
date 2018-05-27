@@ -8,14 +8,10 @@ stages:
 test:
   stage: build
   script:
-    - cd node/
     - ../deps/rebar3 compile
-  # cache:
-  #   paths:
-  #   - node/_build
-    # - deps/lz4
-    # - deps/rocksdb
-
+  cache:
+    paths:
+    - _build/
 # variables:
   # POSTGRES_DB: sample-test
   # DATABASE_URL: "postgresql://postgres@postgres:5432/sample-test"
