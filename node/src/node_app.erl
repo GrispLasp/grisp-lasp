@@ -35,7 +35,7 @@ start(_StartType, _StartArgs) ->
   grisp:add_device(spi2, pmod_als),
   timer:sleep(5000),
   {ok, Worker} = node_server:start_worker(node_stream_worker),
-  timer:sleep(5000),
+  timer:sleep(60000),
   display_data(Worker),
 
  %  node_server:start_worker(pinger_worker),
