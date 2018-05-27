@@ -57,7 +57,7 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 
-%
+% Recompile on your host PC you fucking moron
 % display_data(Worker) ->
 %     spawn_link(?MODULE, fun
 %       (Streamer) when is_pid(Streamer) ->
