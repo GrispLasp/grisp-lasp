@@ -36,7 +36,7 @@ start(_StartType, _StartArgs) ->
   timer:sleep(5000),
   {ok, Worker} = node_server:start_worker(node_stream_worker),
   timer:sleep(60000),
-  display_data(Worker),
+  display(Worker),
 
  %  node_server:start_worker(pinger_worker),
  %  timer:sleep(15000),
@@ -57,12 +57,12 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 
-
-display_data(Worker) ->
-    spawn_link(?MODULE, fun
-      (Streamer) when is_pid(Streamer) ->
-        display(Streamer)
-    end, [Worker]).
+%
+% display_data(Worker) ->
+%     spawn_link(?MODULE, fun
+%       (Streamer) when is_pid(Streamer) ->
+%         display(Streamer)
+%     end, [Worker]).
 
 display(Worker) ->
     {ok, {Lum, Sonar, Gyro}} = gen_server:call(Worker, get_data),
