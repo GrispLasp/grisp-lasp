@@ -31,17 +31,17 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
         {ok, TempsCRDT} = lasp:query({<<"temp">>, state_orset}),
         TempsList = sets:to_list(TempsCRDT),
         io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
-        OldCrdtData = [{Node, OldAvg, HourCounter} || {Node, OldAvg, HourCounter} <- TempsList, Node =:= node()],
+        OldCrdtData = [{Node, OldAvg, HourCounter, HourAvg, HourData} || {Node, OldAvg, HourCounter, HourAvg, HourData} <- TempsList, Node =:= node()],
         io:format("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
         case length(OldCrdtData) of
           0 ->
-            lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp, 1}}, self());
+            lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp, 1, [AverageTemp], [AverageTemp]}}, self());
           1 ->
-            {Node, OldAvg, HourCounter} = hd(OldCrdtData),
+            {Node, OldAvg, HourCounter, HourAvg, HourData} = hd(OldCrdtData),
             NewAverageTemp = ((OldAvg * HourCounter)/(HourCounter+1))+(AverageTemp*(1/(HourCounter+1))),
             io:format("=== New average temp : ~p ===~n",[NewAverageTemp]),
-            lasp:update({<<"temp">>, state_orset}, {rmv, {Node, OldAvg, HourCounter}}, self()),
-            lasp:update({<<"temp">>,state_orset},{add,{node(), NewAverageTemp, HourCounter+1}}, self())
+            lasp:update({<<"temp">>, state_orset}, {rmv, {Node, OldAvg, HourCounter, HourAvg, HourData}}, self()),
+            lasp:update({<<"temp">>,state_orset},{add,{node(), NewAverageTemp, HourCounter+1, HourAvg ++ [NewAverageTemp], HourData ++ [AverageTemp]}}, self())
         end,
         {0, []};
       _ ->
@@ -54,3 +54,35 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
     end
   end,
   WaitFun(SensorFun()).
+
+
+sonar_sensor(Mode, NodeTarget) ->
+  SonarSensor = fun A() ->
+    receive
+      true ->
+        {sonar_listener, NodeTarget} ! {Mode},
+        grisp_led:color(1,red),
+        grisp_led:color(2,red),
+        timer:sleep(750),
+        grisp_led:color(1,green),
+        grisp_led:color(2,green),
+        A()
+    end
+  end,
+
+  SonarListener = fun B() ->
+    receive
+      {Mode} ->
+        grisp_led:color(1,red),
+        grisp_led:color(2,red),
+        timer:sleep(750),
+        grisp_led:color(1,green),
+        grisp_led:color(2,green),
+        B()
+    end
+  end,
+
+  PidSensor = spawn(SonarSensor),
+  register(sonar_sensor, PidSensor),
+  PidListener = spawn(SonarListener),
+  register(sonar_listener, PidListener).
