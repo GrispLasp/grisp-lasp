@@ -49,6 +49,13 @@
                         shutdown => brutal_kill,
                         modules => [node_generic_server_worker]}).
 
+-define(GENERIC_TASKS_SERVER_SPEC,
+                    #{id => node_generic_tasks_server,
+                        start => {node_generic_tasks_server, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [node_generic_tasks_server]}).
 -define(PMOD_ALS_WORKER_SPEC,
                     #{id => pmod_als_worker,
                         start => {pmod_als_worker, start_link, []},
@@ -56,6 +63,14 @@
                         type => worker,
                         shutdown => brutal_kill,
                         modules => [pmod_als_worker]}).
+
+-define(GENERIC_TASKS_WORKER_SPEC,
+                    #{id => node_generic_tasks_worker,
+                        start => {node_generic_tasks_worker, start_link, []},
+                        restart => permanent,
+                        type => worker,
+                        shutdown => brutal_kill,
+                        modules => [node_generic_tasks_worker]}).
 
 -define(NODE_STREAM_WORKER_SPEC(Mode),
                     #{id => node_stream_worker,
@@ -96,8 +111,10 @@ terminate_worker(Pid) ->
 
 get_worker_specs_map() ->
   #{generic_worker => ?GENERIC_SERVER_SPEC,
-  pinger_worker => ?PINGER_SPEC,
-  sensor_server_worker => ?SENSOR_SERVER_SPEC,
+    generic_tasks_server => ?GENERIC_TASKS_SERVER_SPEC,
+    generic_tasks_worker => ?GENERIC_TASKS_WORKER_SPEC,
+    pinger_worker => ?PINGER_SPEC,
+    sensor_server_worker => ?SENSOR_SERVER_SPEC,
   pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
   node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
   node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),

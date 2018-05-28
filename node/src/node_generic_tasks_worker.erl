@@ -82,7 +82,7 @@ handle_call({start_all_tasks}, _From, State = #state{running_tasks=RunningTasks,
         NewFinishedTasksList = FinishedTasks -- FilteredTaskList,
         StartedTasks = lists:map(
           fun(Task) ->
-            TaskFun = element(3,Task),
+            TaskFun = element(3, Task),
             io:format("=== Task chosen ~p ===~n", [Task]),
             {Pid, Ref} = spawn_monitor(TaskFun),
             io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
