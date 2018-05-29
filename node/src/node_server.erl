@@ -118,13 +118,6 @@ init(NodeSup) ->
     end,
     {ok, #state{workers=gb_sets:empty()}}.
 
-% init({NodeSup, Sensors}) ->
-%     io:format("Initializing Node Server with ALS worker~n"),
-%     process_flag(trap_exit, true), %% Ensure Gen Server gets notified when his supervisor dies
-%     self() ! {start_worker_supervisor, NodeSup},
-%     {ok, #state{workers=gb_sets:empty()}}.
-
-
 handle_call({start_worker, WorkerType}, _From, S = #state{worker_sup=WorkerSup, workers=W}) ->
     io:format("=== Starting new worker (~p) ===~n", [WorkerType]),
     case maps:get(WorkerType, get_worker_specs_map()) of

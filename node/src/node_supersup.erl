@@ -45,9 +45,16 @@
 -define (SENSORS, []).
 -endif.
 
+% -define(NODE_SPEC,
+%                       #{id => node_sup,
+%                       start => {node_sup, start_link, ?SENSORS},
+%                       restart => permanent,
+%                       type => supervisor,
+%                       shutdown => 15000,
+%                       modules => [node_sup]}).
 -define(NODE_SPEC,
                       #{id => node_sup,
-                      start => {node_sup, start_link, ?SENSORS},
+                      start => {node_sup, start_link, []},
                       restart => permanent,
                       type => supervisor,
                       shutdown => 15000,
