@@ -6,7 +6,7 @@ This is a repository intended to gather information and provide useful support f
 Based on the principles of edge computing specified by [LightKone](https://www.lightkone.eu/), the distributed nodes should be able to replicate a fraction of the state and operate locally. As an attempt to implement that pattern, the following design is proposed for an edge node :
 
 <p align="center">
-  <img src="https://github.com/GrispLasp/GrispLasp/blob/master/Untitled%20Diagram.png" alt="Design"/>
+  <img src="Design.png" alt="Design"/>
 </p>
 
 ## Cloning/Copying existing project :
