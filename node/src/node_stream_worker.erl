@@ -27,6 +27,8 @@
 -compile({nowarn_unused_function,
          [{stream_data, 2}]}).
 
+-compile(export_all).
+
 %%====================================================================
 %% Macros
 %%====================================================================
@@ -182,7 +184,8 @@ stream_data(Rate, Sensor) ->
 store_data(Rate, Type, SensorData, Node, Self, BitString) ->
     ?PAUSE10,
     lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
-    erlang:send_after(Rate, Self, Type).
+    erlang:send_after(Rate, Self, Type),
+    ok.
 
 flood() ->
   List = lists:seq(1, 30000, 1),

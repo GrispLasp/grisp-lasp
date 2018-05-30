@@ -21,7 +21,9 @@
 %% Timers
 %%====================================================================
 
--define(SLEEP(Interval),   timer:sleep(Interval/application:get_env(node, time_multiplier))).
+-define(TIME_MULTIPLIER,      lists:last(tuple_to_list(application:get_env(node, time_multiplier, {ok, 1})))).
+-define(SLEEP(Interval),                                     timer:sleep((round(Interval/?TIME_MULTIPLIER)))).
+
 -define(PAUSEMS,                     ?SLEEP(?MS)).
 -define(PAUSE1,                     ?SLEEP(?ONE)).
 -define(PAUSE3,                   ?SLEEP(?THREE)).

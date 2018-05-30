@@ -18,7 +18,6 @@
 
 start(_StartType, _StartArgs) ->
   io:format("Application Master has started app ~n"),
-  io:format("Mult ~p ~n", [application:get_env(node, time_multiplier)]),
   % {ok, Supervisor} = node:start(node),
   T1 = os:timestamp(),
   {ok, Supervisor} = node:start(all),
@@ -42,18 +41,18 @@ start(_StartType, _StartArgs) ->
   % node_server:start_worker(generic_tasks_worker),
   % ?PAUSE10,
   % node_server:start_worker(sensor_server_worker),
-  %
-  % ?PAUSE10,
-  %   grisp:add_device(uart, pmod_maxsonar),
-  %
-  % ?PAUSE3,
-  %   grisp:add_device(spi1, pmod_gyro),
-  %
-  % ?PAUSE3,
-  %   grisp:add_device(spi2, pmod_als),
-  %
+
   ?PAUSE10,
-    {ok, _Worker} = node_server:start_worker(node_stream_worker),
+  grisp:add_device(uart, pmod_maxsonar),
+
+  ?PAUSE10,
+  grisp:add_device(spi1, pmod_gyro),
+
+  ?PAUSE10,
+  grisp:add_device(spi2, pmod_als),
+
+  ?PAUSE10,
+  {ok, _Worker} = node_server:start_worker(node_stream_worker),
   ?PAUSE10,
   run(),
   {ok, Supervisor}.
