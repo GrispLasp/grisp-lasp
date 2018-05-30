@@ -57,9 +57,9 @@
                         shutdown => brutal_kill,
                         modules => [pmod_als_worker]}).
 
--define(NODE_STREAM_WORKER_SPEC,
+-define(NODE_STREAM_WORKER_SPEC(Mode),
                     #{id => node_stream_worker,
-                        start => {node_stream_worker, start_link, []},
+                        start => {node_stream_worker, start_link, [Mode]},
                         restart => permanent,
                         type => worker,
                         shutdown => brutal_kill,
@@ -84,7 +84,7 @@ start_link(NodeSup, Sensors) ->
 stop() ->
   gen_server:call(node_server, stop).
 
-start_worker(WorkerType) ->
+start_worker(WorkerType) when is_atom(WorkerType) ->
   gen_server:call(node_server, {start_worker, WorkerType}).
 
 terminate_worker(Pid) ->
@@ -99,7 +99,8 @@ get_worker_specs_map() ->
   pinger_worker => ?PINGER_SPEC,
   sensor_server_worker => ?SENSOR_SERVER_SPEC,
   pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
-  node_stream_worker => ?NODE_STREAM_WORKER_SPEC,
+  node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
+  node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
   sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
 
 %% ===================================================================

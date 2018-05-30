@@ -18,11 +18,13 @@
 
 start(_StartType, _StartArgs) ->
   io:format("Application Master has started app ~n"),
+  io:format("Mult ~p ~n", [application:get_env(node, time_multiplier)]),
   % {ok, Supervisor} = node:start(node),
   T1 = os:timestamp(),
   {ok, Supervisor} = node:start(all),
   T2 = os:timestamp(),
-
+  % ?PAUSE10,
+  % {ok, _Worker} = node_server:start_worker(node_stream_worker_emu),
   Time = timer:now_diff(T2,T1),
   io:format("Time to start lasp partisan and node is ~p ~n",[Time/1000000]),
 
@@ -31,27 +33,29 @@ start(_StartType, _StartArgs) ->
 
   PeerConfig = lasp_partisan_peer_service:manager(),
   io:format("The manager used is ~p ~n",[PeerConfig]),
-  ?PAUSE5,
-  % node_server:start_worker(pinger_worker),
-  ?PAUSE5,
+
+  ?PAUSE10,
+  node_server:start_worker(pinger_worker),
+  ?PAUSE10,
   % node_server:start_worker(generic_tasks_server),
-  % timer:sleep(15000),
+  % ?PAUSE10,
   % node_server:start_worker(generic_tasks_worker),
-  % timer:sleep(15000),
+  % ?PAUSE10,
   % node_server:start_worker(sensor_server_worker),
-  ?PAUSE3,
-    grisp:add_device(uart, pmod_maxsonar),
-
-  ?PAUSE3,
-    grisp:add_device(spi1, pmod_gyro),
-
-  ?PAUSE3,
-    grisp:add_device(spi2, pmod_als),
-
-  ?PAUSE3,
+  %
+  % ?PAUSE10,
+  %   grisp:add_device(uart, pmod_maxsonar),
+  %
+  % ?PAUSE3,
+  %   grisp:add_device(spi1, pmod_gyro),
+  %
+  % ?PAUSE3,
+  %   grisp:add_device(spi2, pmod_als),
+  %
+  ?PAUSE10,
     {ok, _Worker} = node_server:start_worker(node_stream_worker),
-  ?PAUSE3,
-    run(),
+  ?PAUSE10,
+  run(),
   {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
@@ -74,12 +78,13 @@ process(N) ->
   Epoch = ?HMIN * N,
   io:format("Data after = ~p seconds ~n",[?TOS(Epoch)]),
 
-  % {ok, {Lum, Sonar, Gyro}} = node_stream_worker:get_data(),
-  % LumList = dict:to_list(Lum),
   {ok, Lum} = lasp:query({<<"als">>, state_orset}),
+  ?PAUSE3,
   LumList = sets:to_list(Lum),
+  ?PAUSE3,
   {ok, MS} = lasp:query({<<"maxsonar">>, state_orset}),
   Sonar = sets:to_list(MS),
+  ?PAUSE3,
   {ok, Gyr} = lasp:query({<<"gyro">>, state_orset}),
   Gyro = sets:to_list(Gyr),
 

@@ -7,7 +7,7 @@
 %% Gen Server Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
-
+-include("node.hrl").
 
 %% ===================================================================
 %% API functions
@@ -88,9 +88,18 @@ handle_call({ping, Number, Timer},_From,  CurrentList ) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+%% @doc Macros are defined in node.hrl
+%% so calling ?BOARDS() with <em>?DAN</em> argument
+%% will return a list of the hostnames of the boards Dan usually runs
+%% deafult macros are : ?ALL,?ALEX,?DAN,?IGOR
+%% but ?BOARDS(X) will return a list of hostnames
+%% with any other supplied sequence
+%% @end
 ping(PingList,N,Type) when N > 0->
     % List = [node@my_grisp_board_1,node@my_grisp_board_2,node@my_grisp_board_3,node@my_grisp_board_4,node@my_grisp_board_5,node@my_grisp_board_6,node@my_grisp_board_7,node@my_grisp_board_8,node@my_grisp_board_9,node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
-    List = [node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
+    % List = [node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
+    List = ?BOARDS(?IGOR),
     % List = [generic_node_1@GrispAdhoc,generic_node_2@GrispAdhoc],
     ListWithoutSelf = lists:delete(node(),List),
     Ping = fun(X) ->
@@ -106,7 +115,8 @@ ping(PingList,N,Type) when N > 0->
 
       true ->  grisp_led:flash(1, blue, 500), ping(ListToJoin,N-1,partial)
       end;
-ping(PingList,0,Type) ->
+
+ping(PingList,0,_Type) ->
   grisp_led:color(1,green),
   Join = fun(X) ->
    lasp_peer_service:join(X)

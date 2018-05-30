@@ -79,7 +79,7 @@ start_link() ->
   supervisor:start_link({local, node}, ?MODULE, []).
 
 start_link(Args) ->
-  % set_config(),
+  set_config(),
   supervisor:start_link({local, node}, ?MODULE, Args).
 
 start_node() ->

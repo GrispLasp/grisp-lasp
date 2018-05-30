@@ -7,6 +7,7 @@
 %% API
 -export([start_link/0]).
 -export([start_link/1]).
+% -export([stream/0]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -25,7 +26,18 @@ start_link(Args) ->
 %% Supervisor callbacks
 %% ===================================================================
 
-% init([]) ->
+init([]) ->
+  SupFlags = #{strategy => one_for_all,
+               intensity => 1,
+               period => 20},
+  ChildSpecs = [#{id => node_server,
+                  start => {node_server, start_link, [self()]},
+                  restart => permanent,
+                  type => worker,
+                  shutdown => 5000,
+                  modules => [node_server]}],
+  {ok, {SupFlags, ChildSpecs}};
+
 init(_Args) ->
   SupFlags = #{strategy => one_for_all,
                intensity => 1,

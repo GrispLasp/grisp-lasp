@@ -21,7 +21,7 @@
 %% Timers
 %%====================================================================
 
--define(SLEEP(Interval),   timer:sleep(Interval)).
+-define(SLEEP(Interval),   timer:sleep(Interval/application:get_env(node, time_multiplier))).
 -define(PAUSEMS,                     ?SLEEP(?MS)).
 -define(PAUSE1,                     ?SLEEP(?ONE)).
 -define(PAUSE3,                   ?SLEEP(?THREE)).
@@ -44,3 +44,15 @@
     measurements = [],
     count = 0
 }).
+
+%%====================================================================
+%% Records
+%%====================================================================
+
+
+-define(ALL,     lists:seq(1,12,1) ).
+-define(ALEX,     lists:seq(1,6,1) ).
+-define(DAN,      lists:seq(7,9,1) ).
+-define(IGOR,   lists:seq(10,12,1) ).
+
+-define(BOARDS(Name),   [ list_to_atom(lists:flatten(lists:concat([node@my_grisp_board, "_", X]))) || X <- Name ] ).
