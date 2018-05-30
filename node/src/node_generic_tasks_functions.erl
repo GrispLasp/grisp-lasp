@@ -60,24 +60,37 @@ sonar_sensor(Mode, NodeTarget) ->
   SonarSensor = fun A() ->
     receive
       true ->
-        {sonar_listener, NodeTarget} ! {Mode},
-        grisp_led:color(1,red),
-        grisp_led:color(2,red),
-        timer:sleep(750),
-        grisp_led:color(1,green),
-        grisp_led:color(2,green),
+        {sonar_listener, NodeTarget} ! trigger,
+        % {sonar_listener, node@my_grisp_board_2} ! {fuck}.
+        spawn(fun () ->
+          case Mode of
+            in ->
+              lasp:update({"<<enters>>", state_gcounter}, increment, self());
+            out ->
+              lasp:update({"<<exits>>", state_gcounter}, increment, self())
+          end
+        end),
+        grisp_led:color(1,blue),
+        grisp_led:color(2,blue),
+      %  timer:sleep(500),
+      %  grisp_led:color(1,green),
+      %  grisp_led:color(2,green),
         A()
     end
   end,
 
+
   SonarListener = fun B() ->
     receive
-      {Mode} ->
+      Msg ->
+      %  io:format("=== received ~p ===~n", [Mode]),
         grisp_led:color(1,red),
         grisp_led:color(2,red),
+        PidSonar = whereis(pmod_maxsonar),
+        erlang:suspend_process(PidSonar),
+        io:format("suspending_process~n"),
         timer:sleep(750),
-        grisp_led:color(1,green),
-        grisp_led:color(2,green),
+        erlang:resume_process(PidSonar),
         B()
     end
   end,
