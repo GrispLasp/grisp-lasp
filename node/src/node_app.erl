@@ -34,6 +34,7 @@ start(_StartType, _StartArgs) ->
   io:format("The manager used is ~p ~n",[PeerConfig]),
 
   ?PAUSE10,
+  ?PAUSE10,
   node_server:start_worker(pinger_worker),
   ?PAUSE10,
   % node_server:start_worker(generic_tasks_server),
@@ -41,7 +42,7 @@ start(_StartType, _StartArgs) ->
   % node_server:start_worker(generic_tasks_worker),
   % ?PAUSE10,
   % node_server:start_worker(sensor_server_worker),
-
+  %
   ?PAUSE10,
   grisp:add_device(uart, pmod_maxsonar),
 
@@ -54,7 +55,7 @@ start(_StartType, _StartArgs) ->
   ?PAUSE10,
   {ok, _Worker} = node_server:start_worker(node_stream_worker),
   ?PAUSE10,
-  run(),
+  % run(),
   {ok, Supervisor}.
 
 %%--------------------------------------------------------------------

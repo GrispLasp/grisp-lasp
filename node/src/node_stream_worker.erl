@@ -125,6 +125,8 @@ handle_info(timeout, State = #state{ luminosity = Lum, sonar = Sonar, gyro = Gyr
     count = Shade#shade.count + 1} end, Lum),
   NewSonar = Sonar ++ [RawSonar],
   NewGyro = Gyro ++ [RawGyro],
+  % NewSonar = Sonar,
+  % NewGyro = Gyro,
 
   % ok = stream_data(?PMOD_ALS_REFRESH_RATE, als),
   % ok = stream_data(?PMOD_MAXSONAR_REFRESH_RATE, maxsonar),
@@ -183,7 +185,20 @@ stream_data(Rate, Sensor) ->
 
 store_data(Rate, Type, SensorData, Node, Self, BitString) ->
     ?PAUSE10,
-    lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
+    {ok, Set} = lasp:query({BitString, state_orset}),
+    L = sets:to_list(Set),
+    case length(L) of
+      1 ->
+        % H = hd(L),
+        lasp:update({BitString, state_orset}, {rmv, {Node, L}}, Self),
+        lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self);
+      0 ->
+        lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
+        ok;
+      _ ->
+        ok
+    end,
+    % lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
     erlang:send_after(Rate, Self, Type),
     ok.
 
