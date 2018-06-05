@@ -100,6 +100,9 @@ process(N) ->
 
 %%--------------------------------------------------------------------
 
+printer([], Arg) ->
+  io:format("nothing left to print for ~p ~n", [Arg]);
+
 printer([H|[]], Arg) ->
   io:format("Elem = ~p ~n", [H]),
   io:format("done printing ~p ~n", [Arg]);
