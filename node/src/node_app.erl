@@ -44,13 +44,6 @@ start(_StartType, _StartArgs) ->
   node_server:start_worker(sensor_server_worker),
   node_sensor_server_worker:creates(temp),
   ?PAUSE10,
-  % node_server:start_worker(generic_tasks_server),
-  % ?PAUSE10,
-  % node_server:start_worker(generic_tasks_worker),
-  % ?PAUSE10,
-  % node_server:start_worker(sensor_server_worker),
-  %
-  ?PAUSE10,
   grisp:add_device(uart, pmod_maxsonar),
 
   % node_server:start_worker(sensor_client_worker),
