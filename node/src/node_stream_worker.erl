@@ -119,6 +119,8 @@ handle_info(timeout, State = #state{ luminosity = Lum, sonar = Sonar, gyro = Gyr
   Raw = pmod_als:raw(),
   RawSonar = pmod_maxsonar:get(),
   RawGyro = pmod_gyro:read_gyro(),
+  % RawSonar = 100,
+  % RawGyro = 200,
 
   NewLum = dict:update(Raw, fun(Shade) -> #shade{
     measurements = Shade#shade.measurements ++ [Raw],
@@ -182,7 +184,22 @@ stream_data(Rate, Sensor) ->
   ok.
 
 %%--------------------------------------------------------------------
-
+% {ok, TempsCRDT} = lasp:query({<<"temp">>, state_orset}),
+% TempsList = sets:to_list(TempsCRDT),
+% io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
+% OldCrdtData = [{Node, OldAvg, HourCounter, HourAvg, HourData} || {Node, OldAvg, HourCounter, HourAvg, HourData} <- TempsList, Node =:= node()],
+% io:format("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
+% case length(OldCrdtData) of
+%   0 ->
+%     lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp, 1, [AverageTemp], [AverageTemp]}}, self());
+%   1 ->
+%     {Node, OldAvg, HourCounter, HourAvg, HourData} = hd(OldCrdtData),
+%     NewAverageTemp = ((OldAvg * HourCounter)/(HourCounter+1))+(AverageTemp*(1/(HourCounter+1))),
+%     io:format("=== New average temp : ~p ===~n",[NewAverageTemp]),
+%     lasp:update({<<"temp">>, state_orset}, {rmv, {Node, OldAvg, HourCounter, HourAvg, HourData}}, self()),
+%     lasp:update({<<"temp">>,state_orset},{add,{node(), NewAverageTemp, HourCounter+1, HourAvg ++ [NewAverageTemp], HourData ++ [AverageTemp]}}, self())
+% end,
+% {0, []};
 store_data(Rate, Type, SensorData, Node, Self, BitString) ->
     ?PAUSE10,
     {ok, Set} = lasp:query({BitString, state_orset}),
@@ -190,10 +207,14 @@ store_data(Rate, Type, SensorData, Node, Self, BitString) ->
     case length(L) of
       1 ->
         % H = hd(L),
-        lasp:update({BitString, state_orset}, {rmv, {Node, L}}, Self),
-        lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self);
+        % lasp:update({BitString, state_orset}, {rmv, {Node, L}}, Self),
+        % lasp:update({BitString, state_orset}, {rmv, {Node, 30, 1, [30], [30]}}, Self),
+        lasp:update({BitString, state_orset}, {rmv, {Node, 30, 1, SensorData, SensorData}}, Self),
+        % lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self);
+        lasp:update({BitString, state_orset}, {add, {Node, 30, 1, SensorData, SensorData}}, Self);
       0 ->
-        lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
+        lasp:update({BitString, state_orset}, {add, {Node, 30, 1, SensorData, SensorData}}, Self),
+        % lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
         ok;
       _ ->
         ok

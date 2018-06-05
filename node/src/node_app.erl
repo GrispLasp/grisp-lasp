@@ -24,6 +24,8 @@ start(_StartType, _StartArgs) ->
   T2 = os:timestamp(),
   % ?PAUSE10,
   % {ok, _Worker} = node_server:start_worker(node_stream_worker_emu),
+  % {ok, Set} = lasp:query({<<"als">>, state_orset}).
+  % L = sets:to_list(Set).
   Time = timer:now_diff(T2,T1),
   io:format("Time to start lasp partisan and node is ~p ~n",[Time/1000000]),
 
@@ -33,30 +35,29 @@ start(_StartType, _StartArgs) ->
   PeerConfig = lasp_partisan_peer_service:manager(),
   io:format("The manager used is ~p ~n",[PeerConfig]),
 
-  ?PAUSE10,
-  ?PAUSE10,
+  % ?PAUSE10,
   node_server:start_worker(pinger_worker),
-  timer:sleep(15000),
+  ?PAUSE3,
   node_server:start_worker(generic_tasks_server),
-  timer:sleep(15000),
+  ?PAUSE3,
   node_server:start_worker(generic_tasks_worker),
-  timer:sleep(15000),
-  node_server:start_worker(sensor_server_worker),
-  node_sensor_server_worker:creates(temp),
-  ?PAUSE10,
+  ?PAUSE3,
+  % node_server:start_worker(sensor_server_worker),
+  ?PAUSE3,
+  % node_sensor_server_worker:creates(temp),
   grisp:add_device(uart, pmod_maxsonar),
 
   % node_server:start_worker(sensor_client_worker),
   % node:start_all_workers(),
-  ?PAUSE10,
+  ?PAUSE3,
   grisp:add_device(spi1, pmod_gyro),
 
-  ?PAUSE10,
+  ?PAUSE3,
   grisp:add_device(spi2, pmod_als),
 
-  ?PAUSE10,
+  ?PAUSE3,
   {ok, _Worker} = node_server:start_worker(node_stream_worker),
-  ?PAUSE10,
+  ?PAUSE3,
   % run(),
   {ok, Supervisor}.
 
