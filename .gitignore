@@ -10,3 +10,5 @@ rel/example_project
 .rebar
 node/grisp/grisp_base/files/*
 node/grisp/grisp_base/files/
+
+node/rebar\.lock
