@@ -19,3 +19,6 @@ rebar3.crashdump
 # GRiSP
 _grisp
 _checkouts/grisp/ebin/*
+
+# Pre refactor backup sources
+src/backup/*
