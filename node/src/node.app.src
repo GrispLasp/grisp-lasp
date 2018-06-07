@@ -6,7 +6,10 @@
     {applications, [
         kernel,
         grisp,
-        stdlib
+        stdlib,
+        elixir,
+        webserver,
+        faker
     ]},
     {env,[]},
     {modules, []},
