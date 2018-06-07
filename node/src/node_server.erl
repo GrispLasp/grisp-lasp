@@ -115,10 +115,10 @@ get_worker_specs_map() ->
     generic_tasks_worker => ?GENERIC_TASKS_WORKER_SPEC,
     pinger_worker => ?PINGER_SPEC,
     sensor_server_worker => ?SENSOR_SERVER_SPEC,
-  pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
-  node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
-  node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
-  sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
+    pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
+    node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
+    node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
+    sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
 
 %% ===================================================================
 %% Gen Server callbacks
