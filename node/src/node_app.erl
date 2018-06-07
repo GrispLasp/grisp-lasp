@@ -3,6 +3,14 @@
 %% @end
 %%%-------------------------------------------------------------------
 
+% /!\ NOTE :
+% 3.1  Timer Module
+% Creating timers using erlang:send_after/3 and erlang:start_timer/3 , is much more efficient than using the timers provided by the timer module in STDLIB.
+% The timer module uses a separate process to manage the timers.
+% That process can easily become overloaded if many processes create and cancel timers frequently (especially when using the SMP emulator).
+% The functions in the timer module that do not manage timers (such as timer:tc/3 or timer:sleep/1),
+% do not call the timer-server process and are therefore harmless.
+
 -module(node_app).
 
 -behaviour(application).
