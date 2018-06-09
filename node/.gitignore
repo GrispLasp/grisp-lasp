@@ -18,3 +18,4 @@ rebar3.crashdump
 
 # GRiSP
 _grisp
+_checkouts/grisp/ebin/*

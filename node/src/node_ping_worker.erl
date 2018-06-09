@@ -99,7 +99,8 @@ handle_call({ping, Number, Timer},_From,  CurrentList ) ->
 ping(PingList,N,Type) when N > 0->
     % List = [node@my_grisp_board_1,node@my_grisp_board_2,node@my_grisp_board_3,node@my_grisp_board_4,node@my_grisp_board_5,node@my_grisp_board_6,node@my_grisp_board_7,node@my_grisp_board_8,node@my_grisp_board_9,node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
     % List = [node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
-    List = ?BOARDS(?IGOR),
+    % List = ?BOARDS(?IGOR),
+    List = ?BOARDS(?IGOR) ++ ['nodews@Laymer-2'],
     % List = [generic_node_1@GrispAdhoc,generic_node_2@GrispAdhoc],
     ListWithoutSelf = lists:delete(node(),List),
     Ping = fun(X) ->
