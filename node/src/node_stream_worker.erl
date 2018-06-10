@@ -134,6 +134,13 @@ handle_info(timeout,
     % ok = store_data(?PMOD_GYRO_REFRESH_RATE, gyro, NewGyro, node(), self(), atom_to_binary(gyro, latin1)),
     State = #state{luminosity = NewLum, sonar = NewSonar,
 		   gyro = NewGyro},
+
+		Fields = record_info(fields, state),
+		KVElems = lists:map(fun(X) -> {X, []} end, Fields),
+		Map = maps:from_list(KVElems),
+		maps:update(luminosity, NewLum, Map),
+		maps:update(sonar, NewSonar, Map),
+		maps:update(gyro, NewGyro, Map),
     ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, State,
 		     node(), self()),
     % ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, #state{}, node(), self()),
@@ -156,7 +163,17 @@ handle_info(states,
     % ok = stream_data(?PMOD_GYRO_REFRESH_RATE, gyro),
     State = #state{luminosity = NewLum, sonar = NewSonar,
 		   gyro = NewGyro},
-    ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, State,
+
+	 	% maps:update("a", 42, Map).
+		Map = maps:new(),
+
+		% maps:put("a", 42, Map).
+		maps:put(luminosity, NewLum, Map),
+		maps:put(sonar, NewSonar, Map),
+		maps:put(gyro, NewGyro, Map),
+    % ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, State,
+		%      node(), self()),
+    ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, Map,
 		     node(), self()),
     {noreply, State};
 handle_info(als,
@@ -303,10 +320,19 @@ store_state(Rate, Type, State, Node, Self) ->
 		       _ -> Elem
 		     end
 	     end,
+
+		Map = maps:new(),
+
+		% maps:put("a", 42, Map).
+		maps:put(luminosity, State#state.luminosity, Map),
+		maps:put(sonar, State#state.sonar, Map),
+		maps:put(gyro, State#state.gyro, Map),
+		% lists:foreach(fun(Field) -> maps:put(Field, State#state.luminosity, Map) end, record_info(fields, state)),
     case length(L) of
       0 ->
 	  lasp:update({BitString, state_orset},
-		      {add, {Node, State}}, Self),
+		      % {add, {Node, State}}, Self),
+		      {add, {Node, Map}}, Self),
 	  ok;
       % 1 when length(MapReduceList) > 0 ->
       1 ->
@@ -357,6 +383,7 @@ flood() ->
 % lasp:update({<<"states">>, state_orset}, {add, {node(), {state, ALSList = [{64,{shade,[],0}}, {243,{shade,[],0}}, {179,{shade,[],0}}, {115,{shade,[],0}}, {51,{shade,[],0}}], SonarList = lists:seq(1, 10, 1), GyroList = lists:seq(1, 20, 1)}}}, self()).
 % lasp:update({<<"states">>, state_orset}, {add, {node(), {state, [{64,{shade,[],0}}], lists:seq(1, 5, 1), lists:seq(1, 10, 1)}}}, self()).
 % lasp:update({StateBS, state_orset}, {add, {node(), State}}, self()).
+% lasp:update(StateId, {add, {node(), State}}, self()).
 % lasp:update({StateBS, state_orset}, {add, {node@my_grisp_board_11, State11}}, self()).
 % {ok, StateSet} = lasp:query({StateBS, state_orset}).
 % StateId = {StateBS, state_orset}.
@@ -370,6 +397,8 @@ flood() ->
 % SourceId = {<<"states">>, state_orset}.
 % lasp:update(StateId, {add, {node@board2, State}}, Pid).
 % lasp:query({<<"states">>, state_orset}).
+% sets:to_list(lists:nth(2, lists:flatten(tuple_to_list(lasp:query({<<"states">>, state_orset}))))).
+%
 % {ok, Set} = lasp:query({<<"states">>, state_orset}).
 % {ok, Set} = lasp:query({<<"states">>, state_orset}), L = sets:to_list(Set), H = hd(L).
 % lasp:update({<<"states">>, state_orset}, {rmv, H}, Self).
@@ -398,6 +427,21 @@ flood() ->
 %                     gyro = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
 %                             20]}}]
 
+% Map Tuple list :
+% [{node@board,#{luminosity => [{64,{shade,[],0}},
+%                                   {243,{shade,[],0}},
+%                                   {179,{shade,[],0}},
+%                                   {115,{shade,[],0}},
+%
+%                                   {51,{shade,[],0}}],
+%                     sonar => [1,2,3,4,5,6,7,8,9,10],
+%                     gyro => [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,
+%                             20]}}]
+% M = #{luminosity => ALSList, sonar => SonarList, gyro => GyroList}.
+
+
+% Map list : WRONG
+% [#{node@board => state}, #{node@board2 => state2}]
 % MapFun = fun(Elem) ->
 %   case Elem of
 %     {node(), _OldState} ->
@@ -436,4 +480,3 @@ flood() ->
 % Sub = [ X || X <- lists:seq(5, 10, 1) ].
 % Filtered = lists:filter(fun(X) -> X rem 2 == 0 end, ToFilter).
 % Filtered2 = lists:filter(fun(X) -> lists:member(X, Sub) end, ToFilter).
-
