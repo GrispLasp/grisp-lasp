@@ -27,17 +27,24 @@
 start(_StartType, _StartArgs) ->
     io:format("Application Master has started app ~n"),
     % {ok, Supervisor} = node:start(node),
-    T1 = os:timestamp(),
+    % T1 = os:timestamp(),
+    T1 = erlang:monotonic_time(second),
+
     {ok, Supervisor} = node:start(all),
-    T2 = os:timestamp(),
+    T2 = erlang:monotonic_time(second),
+    % T2 = os:timestamp(),
     % ?PAUSE10,
     % {ok, _Worker} = node_server:start_worker(node_stream_worker_emu),
     % {ok, Set} = lasp:query({<<"als">>, state_orset}).
     % L = sets:to_list(Set).
-    Time = timer:now_diff(T2, T1),
+    % Time = timer:now_diff(T2, T1),
+    % io:format("Time to start lasp partisan and node "
+	%       "is ~p ~n",
+	%       [Time / 1000000]),
+    Time = T2 - T1,
     io:format("Time to start lasp partisan and node "
-	      "is ~p ~n",
-	      [Time / 1000000]),
+	      "is approximately ~p seconds ~n",
+	      [Time]),
     LEDs = [1, 2],
     [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
@@ -47,11 +54,11 @@ start(_StartType, _StartArgs) ->
     ?PAUSE3,
     ?PAUSE3,
     ?PAUSE3,
-    node_server:start_worker(generic_tasks_server),
+    % node_server:start_worker(generic_tasks_server),
     ?PAUSE3,
     ?PAUSE3,
     ?PAUSE3,
-    node_server:start_worker(generic_tasks_worker),
+    % node_server:start_worker(generic_tasks_worker),
     ?PAUSE3,
     ?PAUSE3,
     ?PAUSE3,

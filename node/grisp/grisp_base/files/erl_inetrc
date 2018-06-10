@@ -2,6 +2,7 @@
 
 % Add hosts
 {host, {169,254,16,93}, ["adhocTest1"]}.
+{host, {169,254,71,20}, ["GrispAdhoc"]}.
 {host, {169,254,16,23}, ["alex-Lenovo-Yoga-2-13"]}.
 % {host, {169,254,10,196}, ["Laymer-2"]}.
 {host, {169,254,46,170}, ["Laymer-2"]}.
