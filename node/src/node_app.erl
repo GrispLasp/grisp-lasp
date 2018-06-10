@@ -20,6 +20,8 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
+-compile({nowarn_unused_function}).
+
 %%====================================================================
 %% API
 %%====================================================================
@@ -27,20 +29,9 @@
 start(_StartType, _StartArgs) ->
     io:format("Application Master has started app ~n"),
     % {ok, Supervisor} = node:start(node),
-    % T1 = os:timestamp(),
     T1 = erlang:monotonic_time(second),
-
     {ok, Supervisor} = node:start(all),
     T2 = erlang:monotonic_time(second),
-    % T2 = os:timestamp(),
-    % ?PAUSE10,
-    % {ok, _Worker} = node_server:start_worker(node_stream_worker_emu),
-    % {ok, Set} = lasp:query({<<"als">>, state_orset}).
-    % L = sets:to_list(Set).
-    % Time = timer:now_diff(T2, T1),
-    % io:format("Time to start lasp partisan and node "
-	%       "is ~p ~n",
-	%       [Time / 1000000]),
     Time = T2 - T1,
     io:format("Time to start lasp partisan and node "
 	      "is approximately ~p seconds ~n",
@@ -64,12 +55,6 @@ start(_StartType, _StartArgs) ->
     ?PAUSE3,
     % node_server:start_worker(sensor_server_worker),
     ?PAUSE3,
-    % node_sensor_server_worker:creates(temp),
-    grisp:add_device(uart, pmod_maxsonar),
-    % node_server:start_worker(sensor_client_worker),
-    % node:start_all_workers(),
-    ?PAUSE3,
-    grisp:add_device(spi1, pmod_gyro),
     ?PAUSE3,
     grisp:add_device(spi2, pmod_als),
     ?PAUSE3,

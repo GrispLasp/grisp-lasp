@@ -19,7 +19,7 @@
 -export([code_change/3, handle_call/3, handle_cast/2,
 	 handle_info/2, init/1, terminate/2]).
 
--compile({nowarn_unused_function, [{stream_data, 2}]}).
+-compile({nowarn_export_all}).
 
 -compile(export_all).
 
@@ -31,10 +31,6 @@
 
 -define(PMOD_ALS_REFRESH_RATE, ?TEN).
 
--define(PMOD_MAXSONAR_REFRESH_RATE, ?TEN).
-
--define(PMOD_GYRO_REFRESH_RATE, ?TEN).
-
 %%====================================================================
 %% Records
 %%====================================================================
@@ -42,10 +38,8 @@
 % NOTE : prepend atom to list to avoid ASCII representation of integer lists
 % -record(state,
 % 	{luminosity = [lum], sonar = [son], gyro = [gyr]}).
--record(state,
-	{luminosity = [], sonar = [], gyro = []}).
-% -record(state,
-% 	{luminosity = #{}, sonar = [], gyro = []}).
+-record(state, {luminosity = []}).% -record(state,
+				  % 	{luminosity = #{}, sonar = [], gyro = []}).
 
 %%====================================================================
 %% API
@@ -69,45 +63,28 @@ refresh_webserver() ->
 %%====================================================================
 
 init({Mode}) ->
-    % Shades = lists:duplicate(255, #shade{}),
-    % Range = (?PMOD_ALS_RANGE),
-    % List = lists:zipwith(fun (X, Y) -> {X, Y} end, Range,
-	% 		 Shades),
-    % Dict = dict:from_list(List),
-    % State = #state{luminosity = Dict},
-	% Map = maps:new(),
-	% NewMap = maps:put(luminosity, Dict, Map),
-    % State = #state{luminosity = Dict},
-	_ = rand:seed(exsp),
-
+    _ = rand:seed(exsp),
     State = #state{},
     case Mode of
       emu ->
 	  io:format("Starting Emulated stream worker ~n"),
-	  % grisp:remove_device(spi1, pmod_gyro),
-	  % grisp:add_device(spi1, pmod_nav),
-	  % AllRegs = [{Comp, Reg} || {Comp, Regs} <- maps:to_list(pmod_nav:registers()), Reg <- maps:to_list(Regs)],
-	  % [ pmod_nav:read(Comp, [Reg]) || {Comp, {Reg, {_Addr, _Type, _Size, _Conv}}} <- AllRegs ],
-	  flood(),
+	  % flood(),
 	  {ok, State};
       board ->
 	  io:format("Starting stream worker on GRiSP ~n"),
 	  {ok, State, 10000};
-	  % {ok, NewMap, 10000};
+      % {ok, NewMap, 10000};
       _ -> {stop, unknown_launch_mode}
     end.
 
 %%--------------------------------------------------------------------
 
 handle_call({Request}, _From,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
+	    State = #state{luminosity = Lum}) ->
     case Request of
       % guard clause for snippet
       get_data when is_atom(get_data) ->
-	  {reply, {ok, {Lum, Sonar, Gyro}},
-	   State = #state{luminosity = Lum, sonar = Sonar,
-			  gyro = Gyro}};
+	  {reply, {ok, {Lum}}, State = #state{luminosity = Lum}};
       _ -> {reply, unknown_call, State}
     end;
 handle_call(_Request, _From, State) ->
@@ -120,133 +97,21 @@ handle_cast(_Msg, State) -> {noreply, State}.
 %%--------------------------------------------------------------------
 
 handle_info(timeout,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
+	    _State = #state{luminosity = Lum}) ->
     Raw = pmod_als:raw(),
-    RawSonar = pmod_maxsonar:get(),
-    RawGyro = pmod_gyro:read_gyro(),
-	% Raw = rand:uniform(255),
-    % RawSonar = rand:uniform(100),
-    % RawGyro = {rand:uniform(100),rand:uniform(100),rand:uniform(100)},
-    % RawSonar = 100,
-    % RawGyro = 200,
-    % NewLum = dict:update(Raw,
-	% 		 fun (Shade) ->
-	% 			 #shade{measurements =
-	% 				    Shade#shade.measurements ++ [Raw],
-	% 				count = Shade#shade.count + 1}
-	% 		 end,
-	% 		 Lum),
-	% NewLum = #{Raw => 1},
-	% NewLum = Lum:put(){Raw => 1},
-	% NewLum = maps:put(Raw, 1, Lum),
-	NewLum = Lum ++ [Raw],
-    NewSonar = Sonar ++ [RawSonar],
-    NewGyro = Gyro ++ [RawGyro],
-    % NewSonar = Sonar,
-    % NewGyro = Gyro,
-    % ok = stream_data(?PMOD_ALS_REFRESH_RATE, als),
-    % ok = stream_data(?PMOD_MAXSONAR_REFRESH_RATE, maxsonar),
-    % ok = stream_data(?PMOD_GYRO_REFRESH_RATE, gyro),
-    % ok = store_data(?PMOD_ALS_REFRESH_RATE, als, dict:to_list(NewLum), node(), self(), atom_to_binary(als, latin1)),
-    % ok = store_data(?PMOD_MAXSONAR_REFRESH_RATE, maxsonar, NewSonar, node(), self(), atom_to_binary(maxsonar, latin1)),
-    % ok = store_data(?PMOD_GYRO_REFRESH_RATE, gyro, NewGyro, node(), self(), atom_to_binary(gyro, latin1)),
-    % State = #state{luminosity = NewLum, sonar = NewSonar,
-	% 	   gyro = NewGyro},
-	NewState = #state{luminosity = NewLum, sonar = NewSonar,
-		   gyro = NewGyro},
-    % State#state{luminosity = NewLum, sonar = NewSonar,
-	% 	   gyro = NewGyro},
-		%
-		% Fields = record_info(fields, state),
-		% KVElems = lists:map(fun(X) -> {X, []} end, Fields),
-		% Map = maps:from_list(KVElems),
-		% maps:update(luminosity, NewLum, Map),
-		% maps:update(sonar, NewSonar, Map),
-		% maps:update(gyro, NewGyro, Map),
-    ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, NewState,
-		     node(), self()),
-    % ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, #state{}, node(), self()),
+    NewLum = Lum ++ [Raw],
+    NewState = #state{luminosity = NewLum},
+    ok = store_state(?PMOD_ALS_REFRESH_RATE, states,
+		     NewState, node(), self()),
     {noreply, NewState};
 handle_info(states,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
+	    _State = #state{luminosity = Lum}) ->
     Raw = pmod_als:raw(),
-    RawSonar = pmod_maxsonar:get(),
-    RawGyro = pmod_gyro:read_gyro(),
-	% Raw = rand:uniform(255),
-    % RawSonar = rand:uniform(100),
-    % RawGyro = {rand:uniform(100),rand:uniform(100),rand:uniform(100)},
-    % NewLum = dict:update(Raw,
-	% 		 fun (Shade) ->
-	% 			 #shade{measurements =
-	% 				    Shade#shade.measurements ++ [Raw],
-	% 				count = Shade#shade.count + 1}
-	% 		 end,
-	% 		 Lum),
-	% NewLum = maps:put(Raw, 1, Lum),
-	% NewLum = maps:put(Raw, 1, Lum),
-	NewLum = Lum ++ [Raw],
-    NewSonar = Sonar ++ [RawSonar],
-    NewGyro = Gyro ++ [RawGyro],
-    % ok = stream_data(?PMOD_GYRO_REFRESH_RATE, gyro),
-    NewState = #state{luminosity = NewLum, sonar = NewSonar,
-		   gyro = NewGyro},
-	% State#state{luminosity = NewLum, sonar = NewSonar,
-	% 	   gyro = NewGyro},
-	 	% maps:update("a", 42, Map).
-		% Map = maps:new(),
-		%
-		% % maps:put("a", 42, Map).
-		% maps:put(luminosity, NewLum, Map),
-		% maps:put(sonar, NewSonar, Map),
-		% maps:put(gyro, NewGyro, Map),
-    ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, NewState,
-		     node(), self()),
-    % ok = store_state(?PMOD_GYRO_REFRESH_RATE, states, Map,
-	% 	     node(), self()),
-    % {noreply, State};
+    NewLum = Lum ++ [Raw],
+    NewState = #state{luminosity = NewLum},
+    ok = store_state(?PMOD_ALS_REFRESH_RATE, states,
+		     NewState, node(), self()),
     {noreply, NewState};
-handle_info(als,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
-    Raw = pmod_als:raw(),
-    NewLum = dict:update(Raw,
-			 fun (Shade) ->
-				 #shade{measurements =
-					    Shade#shade.measurements ++ [Raw],
-					count = Shade#shade.count + 1}
-			 end,
-			 Lum),
-    % ok = stream_data(?PMOD_ALS_REFRESH_RATE, als),
-    ok = store_data(?PMOD_ALS_REFRESH_RATE, als,
-		    dict:to_list(NewLum), node(), self(),
-		    atom_to_binary(gyro, latin1)),
-    {noreply,
-     State#state{luminosity = NewLum, sonar = Sonar,
-		 gyro = Gyro}};
-handle_info(maxsonar,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
-    RawSonar = pmod_maxsonar:get(),
-    NewSonar = Sonar ++ [RawSonar],
-    % ok = stream_data(?PMOD_MAXSONAR_REFRESH_RATE, maxsonar),
-    ok = store_data(?PMOD_MAXSONAR_REFRESH_RATE, maxsonar,
-		    NewSonar, node(), self(), atom_to_binary(gyro, latin1)),
-    {noreply,
-     State#state{luminosity = Lum, sonar = NewSonar,
-		 gyro = Gyro}};
-handle_info(gyro,
-	    State = #state{luminosity = Lum, sonar = Sonar,
-			   gyro = Gyro}) ->
-    RawGyro = pmod_gyro:read_gyro(),
-    NewGyro = Gyro ++ [RawGyro],
-    % ok = stream_data(?PMOD_GYRO_REFRESH_RATE, gyro),
-    ok = store_data(?PMOD_GYRO_REFRESH_RATE, gyro, NewGyro,
-		    node(), self(), atom_to_binary(gyro, latin1)),
-    {noreply,
-     State#state{luminosity = Lum, sonar = Sonar,
-		 gyro = NewGyro}};
 handle_info(_Info, State) -> {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -283,65 +148,41 @@ store_data(Rate, Type, SensorData, Node, Self,
 	  ok;
       _ -> ok
     end,
-    % lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
     erlang:send_after(Rate, Self, Type),
     ok.
 
 % node_stream_worker:store_state(5000, states, {state,[3],[c],[{lol},{jk}]}, node(), self()).
 store_state(Rate, Type, State, Node, Self) ->
     ?PAUSE10,
-  	% io:format("State ~p ~n", [State]),
+    % io:format("State ~p ~n", [State]),
     BitString = atom_to_binary(Type, latin1),
     {ok, Set} = lasp:query({BitString, state_orset}),
     L = sets:to_list(Set),
     MapReduceList = lists:filtermap(fun (Elem) ->
 					    case Elem of
 					      {Node,
-					       _S = #state{luminosity = _Lum,
-							   sonar = _Sonar,
-							   gyro = _Gyro}} ->
+					       _S = #state{luminosity =
+							       _Lum}} ->
 						  {true, {Node, State}};
 					      _ -> false
 					    end
 				    end,
 				    L),
-
-		% Map = maps:new(),
-		%
-		% % maps:put("a", 42, Map).
-		% maps:put(luminosity, State#state.luminosity, Map),
-		% maps:put(sonar, State#state.sonar, Map),
-		% maps:put(gyro, State#state.gyro, Map),
-		% % lists:foreach(fun(Field) -> maps:put(Field, State#state.luminosity, Map) end, record_info(fields, state)),
     case length(L) of
       0 ->
 	  lasp:update({BitString, state_orset},
 		      {add, {Node, State}}, Self),
-		      % {add, {Node, Map}}, Self),
 	  ok;
-      % 1 when length(MapReduceList) > 0 ->
       1 ->
 	  Leaving = hd(L),
-	  % io:format("Leaving : ~p ~n", [Leaving]),
 	  H = hd(MapReduceList),
-	  % io:format("MapReduce Head : ~p ~n", [H]),
 	  lasp:update({BitString, state_orset}, {rmv, Leaving},
 		      Self),
 	  lasp:update({BitString, state_orset}, {add, H}, Self);
       _ -> ok
     end,
-    % lasp:update({BitString, state_orset}, {add, {Node, SensorData}}, Self),
     erlang:send_after(Rate, Self, Type),
     ok.
-
-flood() ->
-    List = lists:seq(1, 30000, 1),
-    Fun = fun (Elem) when is_integer(Elem) ->
-		  ?PAUSE1,
-		  lasp:update({<<"flood">>, state_orset},
-			      {add, {node(), Elem}}, self())
-	  end,
-    ok = lists:foreach(Fun, List).
 
 % lasp:query({<<"als">>, state_orset}).
 % lasp:query({<<"sonar">>, state_orset}).
@@ -430,7 +271,6 @@ flood() ->
 %                             20]}}]
 % M = #{luminosity => ALSList, sonar => SonarList, gyro => GyroList}.
 
-
 % Map list : WRONG
 % [#{node@board => state}, #{node@board2 => state2}]
 % MapFun = fun(Elem) ->
@@ -472,7 +312,6 @@ flood() ->
 % Filtered = lists:filter(fun(X) -> X rem 2 == 0 end, ToFilter).
 % Filtered2 = lists:filter(fun(X) -> lists:member(X, Sub) end, ToFilter).
 
-
 %%====================================================================
 %% Lots of blah blah ahead
 %%====================================================================
@@ -500,8 +339,6 @@ flood() ->
 %
 % This method is the current closest to a Lasp variable aggregation
 
-
-
 % FilterFun = fun (Elem) ->
 % 		case Elem of
 % 		  {Node,
@@ -523,3 +360,4 @@ flood() ->
 % 	       _ -> Elem
 % 	     end
 %      end,
+
