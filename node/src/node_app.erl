@@ -54,13 +54,15 @@ start(_StartType, _StartArgs) ->
     node_server:start_worker(sensor_server_worker),
     ?PAUSE10,
     ?PAUSE10,
+    node_sensor_server_worker:creates(temp),
+    ?PAUSE10,
+    ?PAUSE10,
     grisp:add_device(spi2, pmod_als),
     ?PAUSE10,
     ?PAUSE10,
     {ok, _Worker} =	node_server:start_worker(node_stream_worker),
     ?PAUSE10,
     ?PAUSE10,
-
     run(),
     {ok, Supervisor}.
 
