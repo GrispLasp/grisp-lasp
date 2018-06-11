@@ -224,6 +224,7 @@ store_state(Rate, Type, State, Node, Self) ->
 % lasp:update(StateId, {add, {node@board2, State}}, Pid).
 % lasp:query({<<"states">>, state_orset}).
 % sets:to_list(lists:nth(2, lists:flatten(tuple_to_list(lasp:query({<<"states">>, state_orset}))))).
+% sets:to_list(lists:nth(2, lists:flatten(tuple_to_list(lasp:query({<<"temp">>, state_orset}))))).
 %
 %
 % lasp_peer_service:join(webserver_node@GrispAdhoc).
@@ -360,4 +361,3 @@ store_state(Rate, Type, State, Node, Self) ->
 % 	       _ -> Elem
 % 	     end
 %      end,
-
