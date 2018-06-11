@@ -24,19 +24,19 @@ start_link() ->
 terminate() -> gen_server:call(?MODULE, {terminate}).
 
 add_task(Task) ->
-    gen_server:call(?MODULE, {add_task, Task}).
+    gen_server:call(?MODULE, {add_task, Task}, infinity).
 
 remove_task(Name) ->
-    gen_server:call(?MODULE, {remove_task, Name}).
+    gen_server:call(?MODULE, {remove_task, Name}, infinity).
 
 remove_all_tasks() ->
-    gen_server:call(?MODULE, {remove_all_tasks}).
+    gen_server:call(?MODULE, {remove_all_tasks}, infinity).
 
 get_all_tasks() ->
-    gen_server:call(?MODULE, {get_all_tasks}).
+    gen_server:call(?MODULE, {get_all_tasks}, infinity).
 
 find_task(Name) ->
-    gen_server:call(?MODULE, {find_task, Name}).
+    gen_server:call(?MODULE, {find_task, Name}, infinity).
 
 %% ===================================================================
 %% Gen Server callbacks

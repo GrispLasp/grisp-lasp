@@ -41,27 +41,27 @@ start(_StartType, _StartArgs) ->
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
     ?PAUSE10,
+    ?PAUSE10,
     node_server:start_worker(pinger_worker),
-    ?PAUSE3,
-    ?PAUSE3,
-    ?PAUSE3,
-    % node_server:start_worker(generic_tasks_server),
-    ?PAUSE3,
-    ?PAUSE3,
-    ?PAUSE3,
-    % node_server:start_worker(generic_tasks_worker),
-    ?PAUSE3,
-    ?PAUSE3,
-    ?PAUSE3,
-    % node_server:start_worker(sensor_server_worker),
-    ?PAUSE3,
-    ?PAUSE3,
+    ?PAUSE10,
+    ?PAUSE10,
+    node_server:start_worker(generic_tasks_server),
+    ?PAUSE10,
+    ?PAUSE10,
+    node_server:start_worker(generic_tasks_worker),
+    ?PAUSE10,
+    ?PAUSE10,
+    node_server:start_worker(sensor_server_worker),
+    ?PAUSE10,
+    ?PAUSE10,
     grisp:add_device(spi2, pmod_als),
-    ?PAUSE3,
-    {ok, _Worker} =
-	node_server:start_worker(node_stream_worker),
-    ?PAUSE3,
-    % run(),
+    ?PAUSE10,
+    ?PAUSE10,
+    {ok, _Worker} =	node_server:start_worker(node_stream_worker),
+    ?PAUSE10,
+    ?PAUSE10,
+
+    run(),
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
@@ -73,7 +73,8 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 
-run() -> spawn_link(fun () -> process(1) end).
+% run() -> spawn_link(fun () -> process(1) end).
+run() -> spawn_link(fun () -> node_generic_tasks_worker:leds() end).
 
 %%--------------------------------------------------------------------
 

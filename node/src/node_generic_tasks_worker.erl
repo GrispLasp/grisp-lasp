@@ -2,9 +2,11 @@
 
 -behaviour(gen_server).
 
+-include("node.hrl").
+
 %% API
 -export([find_and_start_task/0, isRunning/1,
-	 start_all_tasks/0, start_link/0, start_task/1, stop/0]).
+	 start_all_tasks/0, start_link/0, start_task/1, stop/0, leds/0]).
 
 %% Gen Server Callbacks
 -export([code_change/3, handle_call/3, handle_cast/2,
@@ -22,16 +24,16 @@ start_link() ->
 			  []).
 
 start_task(Name) ->
-    gen_server:call(?MODULE, {start_task, Name}).
+    gen_server:call(?MODULE, {start_task, Name}, infinity).
 
 find_and_start_task() ->
-    gen_server:call(?MODULE, {find_and_start_task}).
+    gen_server:call(?MODULE, {find_and_start_task}, infinity).
 
 start_all_tasks() ->
-    gen_server:call(?MODULE, {start_all_tasks}).
+    gen_server:call(?MODULE, {start_all_tasks}, infinity).
 
 isRunning(TaskName) ->
-    gen_server:call(?MODULE, {isRunning, TaskName}).
+    gen_server:call(?MODULE, {isRunning, TaskName}, infinity).
 
 stop() -> gen_server:call(?MODULE, stop).
 
@@ -44,7 +46,7 @@ stop() -> gen_server:call(?MODULE, stop).
 %% ===================================================================
 
 init({}) ->
-    io:format("Initializing Node Server~n"),
+    io:format("Initializing Node Worker~n"),
     {ok, #state{running_tasks = [], finished_tasks = []}}.
 
 handle_call({start_task, Name}, _From,
@@ -250,3 +252,16 @@ filter_task_list_1({Name, Targets, _}, RunningTasks) ->
 		     true -> false
 		  end,
     IsCanditate.
+
+leds() ->
+		?PAUSE10,
+		FoundLedFun = start_task(redled),
+		case FoundLedFun of
+			task_not_found ->
+				leds();
+			{ok, _} ->
+				io:format("=== LEDs changed to red ===~n");
+			_ ->
+				io:format("=== Unknown case ===~n")
+		end,
+		ok.
