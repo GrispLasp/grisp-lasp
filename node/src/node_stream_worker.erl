@@ -173,7 +173,7 @@ store_state(Rate, Type, State, Node, Self) ->
 	  lasp:update({BitString, state_orset},
 		      {add, {Node, State}}, Self),
 	  ok;
-      1 ->
+      1 when length(MapReduceList) > 0 ->
 	  Leaving = hd(L),
 	  H = hd(MapReduceList),
 	  lasp:update({BitString, state_orset}, {rmv, Leaving},
