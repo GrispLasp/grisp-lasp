@@ -4,3 +4,6 @@
 [submodule "Dissertation"]
 	path = Dissertation
 	url = https://git.overleaf.com/16203742gcqdcymdhfxf
+[submodule "node/elixir_libs/Numerix"]
+	path = node/elixir_libs/Numerix
+	url = https://github.com/safwank/Numerix.git
