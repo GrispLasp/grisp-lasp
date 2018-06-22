@@ -10,3 +10,6 @@
 [submodule "node/elixir_libs/Flow"]
 	path = node/elixir_libs/Flow
 	url = https://github.com/elixir-lang/flow.git
+[submodule "node/elixir_libs/GenStage"]
+	path = node/elixir_libs/GenStage
+	url = https://github.com/elixir-lang/gen_stage.git
