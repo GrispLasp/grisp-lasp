@@ -225,7 +225,7 @@ store_state(Rate, Type, State, Node, Self) ->
 % lasp:query({<<"states">>, state_orset}).
 % sets:to_list(lists:nth(2, lists:flatten(tuple_to_list(lasp:query({<<"states">>, state_orset}))))).
 % sets:to_list(lists:nth(2, lists:flatten(tuple_to_list(lasp:query({<<"temp">>, state_orset}))))).
-%
+% net_adm:ping(webserver_node@GrispAdhoc).
 %
 % lasp_peer_service:join(webserver_node@GrispAdhoc).
 % net_adm:ping(webserver_node@GrispAdhoc).
@@ -235,7 +235,7 @@ store_state(Rate, Type, State, Node, Self) ->
 % net_adm:ping(web_server_node_2@GrispAdhoc).
 % {ok, Set} = lasp:query({<<"states">>, state_orset}), L = sets:to_list(Set), H = hd(L).
 % lasp:update({<<"states">>, state_orset}, {rmv, H}, Self).
-
+% lasp_peer_service:members().
 % {ok, Set2} = lasp:query(StateId).
 % FilterFun = fun(Elem) -> case Elem of {Node, _S = #state{ luminosity = _Lum, sonar = _Sonar, gyro = _Gyro }} -> true; _ -> false end end.
 
