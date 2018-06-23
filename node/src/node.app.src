@@ -12,7 +12,7 @@
         % webserver,
         % faker
     ]},
-    {env,[]},
+    {env,[{webserver_host, 'nodews@Laymer-3'}]},
     {modules, []},
 
     {maintainers, []},

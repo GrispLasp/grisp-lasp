@@ -98,8 +98,8 @@ handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_info(timeout,
 	    _State = #state{luminosity = Lum}) ->
-	{_, {H, M, S}} = calendar:local_time(),
-    Raw = {pmod_als:raw(), {H, M, S}},
+	{{Y, Mo, D}, {H, Mi, S}} = maybe_get_time(),
+    Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
     % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
     NewState = #state{luminosity = NewLum},
@@ -108,8 +108,8 @@ handle_info(timeout,
     {noreply, NewState};
 handle_info(states,
 	    _State = #state{luminosity = Lum}) ->
-	{_, {H, M, S}} = calendar:local_time(),
-    Raw = {pmod_als:raw(), {H, M, S}},
+	{{Y, Mo, D}, {H, Mi, S}} = maybe_get_time(),
+    Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
     % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
     NewState = #state{luminosity = NewLum},
@@ -187,6 +187,42 @@ store_state(Rate, Type, State, Node, Self) ->
     end,
     erlang:send_after(Rate, Self, Type),
     ok.
+
+%% @doc Returns actual time and date if available from the webserver, or the local node time and date.
+%%
+%%      The GRiSP local time is always 1-Jan-1988::00:00:00
+%%      once the board has booted. Therefore the values are irrelevant
+%%		and cannot be compared between different boards as nodes
+%%		do not boot all at the same time, or can reboot.
+%%      But if a node can fetch the actual time and date from a remote server
+%%		at least once, the local values can be used as offsets.
+% -spec maybe_get_time() -> calendar:datetime().
+-spec maybe_get_time() -> Time :: calendar:datetime().
+	% ; maybe_get_time(Arg :: term()) -> calendar:datetime().
+maybe_get_time() ->
+	WS = application:get_env(node, webserver_host),
+	maybe_get_time(WS).
+
+-spec maybe_get_time(Args) -> Time :: calendar:datetime() when Args :: tuple()
+	; (Arg) -> Time :: calendar:datetime() when Arg :: atom().
+maybe_get_time({ok, WS}) ->
+	Res = rpc:call(WS, calendar, local_time, []),
+	maybe_get_time(Res);
+
+maybe_get_time(undefined) ->
+	io:format("No webserver host found in environment, local time will be used ~n"),
+	maybe_get_time(local);
+
+maybe_get_time({{Y,Mo,D},{H,Mi,S}}) ->
+	{{Y,Mo,D},{H,Mi,S}};
+
+maybe_get_time({badrpc, Reason}) ->
+	io:format("Failed to get local time from webserver ~n"),
+	io:format("Reason : ~p ~n", [Reason]),
+	maybe_get_time(local);
+
+maybe_get_time(local) ->
+	calendar:local_time().
 
 % lasp:query({<<"als">>, state_orset}).
 % lasp:query({<<"sonar">>, state_orset}).
@@ -365,3 +401,13 @@ store_state(Rate, Type, State, Node, Self) ->
 % 	       _ -> Elem
 % 	     end
 %      end,
+
+
+
+% rpc:call('nodews@Laymer-3', calendar, local_time, []).
+% {{Y,Mo,D},{H,Mi,S}} = node_stream_worker:maybe_get_time().
+% T = node_stream_worker:maybe_get_time().
+% {Date,Time} = T.
+% {H, M, S} = Time.
+% {H, M, D} = Date.
+% {{Y,M,D},{H,M,S}} = T.

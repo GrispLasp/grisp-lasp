@@ -66,7 +66,7 @@ start(_StartType, _StartArgs) ->
     % node_sensor_server_worker:creates(temp),
     ?PAUSE10,
     % ?PAUSE10,
-    run(),
+    % run(),
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------

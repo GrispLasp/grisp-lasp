@@ -110,7 +110,8 @@ ping(PingList, N, Type) when N > 0 ->
     % List = [node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
     % List = ?BOARDS(?IGOR),
     List = (?BOARDS((?IGOR))) ++
-	     ['nodews@Laymer-2', 'nodews@Laymer-3', 'webserver_node@GrispAdhoc'],
+	     % ['nodews@Laymer-2', 'nodews@Laymer-3', 'webserver_node@GrispAdhoc'],
+	     ['nodews@Laymer-3'],
     % List = [generic_node_1@GrispAdhoc,generic_node_2@GrispAdhoc],
     ListWithoutSelf = lists:delete(node(), List),
     Ping = fun (X) -> net_adm:ping(X) == pong end,
