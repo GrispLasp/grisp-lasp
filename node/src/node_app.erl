@@ -28,14 +28,14 @@
 
 start(_StartType, _StartArgs) ->
     io:format("Application Master has started app ~n"),
-    {ok, Supervisor} = node:start(node),
-    % T1 = erlang:monotonic_time(second),
-    % {ok, Supervisor} = node:start(all),
-    % T2 = erlang:monotonic_time(second),
-    % Time = T2 - T1,
-    % io:format("Time to start lasp partisan and node "
-	%       "is approximately ~p seconds ~n",
-	%       [Time]),
+    % {ok, Supervisor} = node:start(node),
+    T1 = erlang:monotonic_time(second),
+    {ok, Supervisor} = node:start(all),
+    T2 = erlang:monotonic_time(second),
+    Time = T2 - T1,
+    io:format("Time to start lasp partisan and node "
+	      "is approximately ~p seconds ~n",
+	      [Time]),
     LEDs = [1, 2],
     [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
