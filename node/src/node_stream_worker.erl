@@ -98,7 +98,9 @@ handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_info(timeout,
 	    _State = #state{luminosity = Lum}) ->
-    Raw = pmod_als:raw(),
+	{_, {H, M, S}} = calendar:local_time(),
+    Raw = {pmod_als:raw(), {H, M, S}},
+    % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
     NewState = #state{luminosity = NewLum},
     ok = store_state(?PMOD_ALS_REFRESH_RATE, states,
@@ -106,7 +108,9 @@ handle_info(timeout,
     {noreply, NewState};
 handle_info(states,
 	    _State = #state{luminosity = Lum}) ->
-    Raw = pmod_als:raw(),
+	{_, {H, M, S}} = calendar:local_time(),
+    Raw = {pmod_als:raw(), {H, M, S}},
+    % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
     NewState = #state{luminosity = NewLum},
     ok = store_state(?PMOD_ALS_REFRESH_RATE, states,
