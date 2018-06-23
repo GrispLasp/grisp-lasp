@@ -5,7 +5,7 @@
 temp_sensor({Counter, Temps}, PeriodicTime) ->
     WaitFun = fun (State) ->
 		      receive
-			
+
 			after PeriodicTime ->
 				  io:format("State is ~p and periodicTime is ~p ===~n",
 					    [State, PeriodicTime]),
@@ -33,16 +33,16 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
 			      {ok, TempsCRDT} = lasp:query({<<"temp">>,
 							    state_orset}),
 			      TempsList = sets:to_list(TempsCRDT),
-			      io:format("=== Temps CRDT : ~p ===~n",
-					[TempsList]),
+			    %   io:format("=== Temps CRDT : ~p ===~n",
+					% [TempsList]),
 			      OldCrdtData = [{Node, OldAvg, HourCounter,
 					      HourAvg, HourData}
 					     || {Node, OldAvg, HourCounter,
 						 HourAvg, HourData}
 						    <- TempsList,
 						Node =:= node()],
-			      io:format("=== Old CRDT data is ~p ===~n",
-					[OldCrdtData]),
+			    %   io:format("=== Old CRDT data is ~p ===~n",
+					% [OldCrdtData]),
 			      case length(OldCrdtData) of
 				0 ->
 				    lasp:update({<<"temp">>, state_orset},
