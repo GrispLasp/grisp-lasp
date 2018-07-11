@@ -5,8 +5,9 @@
     {mod, {node_app, []}},
     {applications, [
         kernel,
-        grisp,
-        stdlib
+        % grisp,
+        stdlib,
+        os_mon
         % stdlib,
         % elixir,
         % webserver,
