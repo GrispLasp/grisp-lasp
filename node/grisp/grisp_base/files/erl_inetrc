@@ -1,13 +1,8 @@
 %--- Erlang Inet Configuration -------------------------------------------------
 
 % Add hosts
-{host, {169,254,16,93}, ["adhocTest1"]}.
-{host, {169,254,139,87}, ["GrispAdhoc"]}.
-% {host, {169,254,71,20}, ["GrispAdhoc"]}.
-{host, {169,254,16,23}, ["alex-Lenovo-Yoga-2-13"]}.
-% {host, {169,254,10,196}, ["Laymer-2"]}.
-{host, {169,254,46,170}, ["Laymer-2"]}.
-{host, {169,254,190,69}, ["Laymer-3"]}.
+% {host, {169,254,16,23}, ["alex-Lenovo-Yoga-2-13"]}.
+{host, {169,254,91,23}, ["Laymer-3"]}.
 {host, {169,254,16,1}, ["my_grisp_board_1"]}.
 {host, {169,254,16,2}, ["my_grisp_board_2"]}.
 {host, {169,254,16,3}, ["my_grisp_board_3"]}.

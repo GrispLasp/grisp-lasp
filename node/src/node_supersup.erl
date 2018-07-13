@@ -66,7 +66,7 @@ set_config() ->
     % partisan_config:set(partisan_peer_service_manager, partisan_hyparview_peer_service_manager),
     partisan_config:set(partisan_peer_service_manager,
 			partisan_hyparview_peer_service_manager),
-    partisan_config:set(peer_port, 50000),
+    % partisan_config:set(peer_port, 50000),
     ok.
 
 start_link() ->

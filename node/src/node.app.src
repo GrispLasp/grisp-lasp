@@ -5,14 +5,15 @@
     {mod, {node_app, []}},
     {applications, [
         kernel,
-        grisp,
-        stdlib
+        % grisp,
+        stdlib,
+        os_mon
         % stdlib,
         % elixir,
         % webserver,
         % faker
     ]},
-    {env,[]},
+    {env,[{webserver_host, 'nodews@Laymer-3'}]},
     {modules, []},
 
     {maintainers, []},

@@ -16,7 +16,7 @@ start(all) ->
     io:format("Starting Partisan, Lasp and Node~n"),
     node_supersup:start_link(all);
 start(node) ->
-    io:format("Starting node local dev env~n"),
+    io:format("Starting Node~n"),
     node_supersup:start_link(node).
 
 start_node() ->
