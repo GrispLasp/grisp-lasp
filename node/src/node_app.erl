@@ -31,6 +31,7 @@ start(_StartType, _StartArgs) ->
     % {ok, Supervisor} = node:start(node),
     case os:type() of % Check if application is ran on a grisp or a laptop
       {unix, darwin} -> os:putenv("type", "laptop");
+      {unix, linux} -> os:putenv("type", "laptop");
       _ -> os:putenv("type", "grisp")
     end,
     T1 = erlang:monotonic_time(second),
