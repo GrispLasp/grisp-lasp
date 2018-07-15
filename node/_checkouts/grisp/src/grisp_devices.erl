@@ -28,7 +28,6 @@
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, undefined, []).
 
 setup() ->
-    io:format("coucou"),
     Devices = application:get_env(grisp, devices, []),
     % TODO: Validate ports
     [apply(grisp, add_device, tuple_to_list(Dev)) || Dev <- Devices],

@@ -7,6 +7,7 @@
         kernel,
         grisp,
         stdlib
+        % os_mon
         % stdlib,
         % elixir,
         % webserver,
