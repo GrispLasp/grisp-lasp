@@ -1,5 +1,5 @@
 {"1.1.0",
-[{<<"acceptor_pool">>,{pkg,<<"acceptor_pool">>,<<"1.0.0-rc.0">>},1},
+[{<<"acceptor_pool">>,{pkg,<<"acceptor_pool">>,<<"1.0.0-rc.0">>},2},
  {<<"epmd">>,
   {git,"https://github.com/erlang/epmd",
        {ref,"4d1a595b9d5c32fc0e55f462da381de62de23bf0"}},
@@ -14,11 +14,11 @@
  {<<"lasp_support">>,{pkg,<<"lasp_support">>,<<"0.0.3">>},1},
  {<<"mapz">>,{pkg,<<"mapz">>,<<"0.3.0">>},1},
  {<<"plumtree">>,{pkg,<<"plumtree">>,<<"0.5.0">>},1},
- {<<"quickrand">>,{pkg,<<"quickrand">>,<<"1.7.3">>},2},
+ {<<"quickrand">>,{pkg,<<"quickrand">>,<<"1.7.3">>},3},
  {<<"rand_compat">>,{pkg,<<"rand_compat">>,<<"0.0.3">>},1},
  {<<"time_compat">>,{pkg,<<"time_compat">>,<<"0.0.1">>},1},
  {<<"types">>,{pkg,<<"types">>,<<"0.1.8">>},1},
- {<<"uuid">>,{pkg,<<"uuid_erl">>,<<"1.7.3">>},1}]}.
+ {<<"uuid">>,{pkg,<<"uuid_erl">>,<<"1.7.3">>},2}]}.
 [
 {pkg_hash,[
  {<<"acceptor_pool">>, <<"679D741DF87FC13599B1AEF2DF8F78F1F880449A6BEFAB7C44FB6FAE0E92A2DE">>},
