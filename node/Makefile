@@ -11,7 +11,7 @@ GRISPAPP	       = node
 # VERSION         ?= $(shell git describe --tags)
 BASE_DIR         = $(shell pwd)
 HOME_DIR         = $(shell echo $HOME)
-CACHE_DIR        = $(HOME_DIR)/.cache/rebar3
+CACHE_DIR        = $(HOME)/.cache/rebar3
 ERLANG_BIN       = $(shell dirname $(shell which erl))
 HOSTNAME         = $(shell hostname)
 COOKIE           = MyCookie
@@ -19,8 +19,8 @@ VERSION 	       = 0.1.0
 MAKE						 = make
 
 .PHONY: grispbuild rel deps plots dcos logs fpm no-cfg-build tarball-build \
-	build	compile-no-deps test docs xref dialyzer-run dialyzer-quick dialyzer \
-	cleanplt upload-docs
+	build compile-no-deps test docs xref dialyzer-run dialyzer-quick dialyzer \
+	cleanplt upload-docs wipeout clean cacheclean
 # EXCLUDE=$(subst src/bar.cpp,,${SRC_FILES})
 # SRC_FILES = $(filter-out $(wildcard ./_*))
 
@@ -49,7 +49,7 @@ tarball-build:
 ## Cleaning targets
 ##
 
-wipeout: clean cacheclean
+wipeout: cacheclean clean
 	$(REBAR) unlock
 
 clean: buildclean grispclean
@@ -64,7 +64,7 @@ grispclean:
 cacheclean:
 	rm -rdf $(CACHE_DIR)/hex
 	rm -rdf $(CACHE_DIR)/plugins/rebar3_grisp
-
+	$(REBAR) update
 
 ##
 ## Test targets
