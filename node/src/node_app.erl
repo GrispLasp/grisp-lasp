@@ -25,6 +25,8 @@
 %%====================================================================
 %% API
 %%====================================================================
+% TODO : find a way to get rid of lager, see commit below
+% https://github.com/lasp-lang/lasp/pull/295/commits/e2f948f879145a5ff31cf5458201768ca97b406b
 
 start(_StartType, _StartArgs) ->
     io:format("Application Master has started app ~n"),
@@ -35,7 +37,8 @@ start(_StartType, _StartArgs) ->
       _ -> os:putenv("type", "grisp")
     end,
     T1 = erlang:monotonic_time(second),
-    {ok, Supervisor} = node:start(all),
+    % {ok, Supervisor} = node:start(all),
+    {ok, Supervisor} = node:start(node),
     T2 = erlang:monotonic_time(second),
     Time = T2 - T1,
     io:format("Time to start lasp partisan and node "
