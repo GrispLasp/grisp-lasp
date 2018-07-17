@@ -10,7 +10,10 @@ rel/example_project
 .rebar
 node/grisp/grisp_base/files/*
 node/grisp/grisp_base/files/
+<<<<<<< HEAD
 
 node/rebar\.lock
 
 node/src/rebar\.lock
+=======
+>>>>>>> adcccf9d1f7c2d857da54ed6311c52dfa4e1e5f6
