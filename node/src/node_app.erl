@@ -30,6 +30,7 @@
 
 start(_StartType, _StartArgs) ->
     io:format("Application Master has started app ~n"),
+    % application:ensure_all_started(lasp),
     % {ok, Supervisor} = node:start(node),
     case os:type() of % Check if application is ran on a grisp or a laptop
       {unix, darwin} -> os:putenv("type", "laptop");
@@ -45,7 +46,7 @@ start(_StartType, _StartArgs) ->
 	      "is approximately ~p seconds ~n",
 	      [Time]),
     LEDs = [1, 2],
-    [grisp_led:flash(L, aqua, 500) || L <- LEDs],
+    % [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
     % ?PAUSE10,
