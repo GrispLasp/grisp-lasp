@@ -143,5 +143,4 @@ init(all) ->
 init(node) ->
     SupFlags = #{strategy => one_for_one, intensity => 1,
 		 period => 10},
-	{ok, _Started} = application:ensure_all_started(lasp),
     {ok, {SupFlags, [?NODE_SPEC]}}.

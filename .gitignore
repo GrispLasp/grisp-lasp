@@ -10,8 +10,3 @@ rel/example_project
 .rebar
 node/grisp/grisp_base/files/*
 node/grisp/grisp_base/files/
-node/_checkouts/grisp
-node/_checkouts/partisan
-node/rebar\.lock
-
-node/src/rebar\.lock
