@@ -46,7 +46,7 @@ stop() ->
 
 init({}) ->
     io:format("Initializing Node Server~n"),
-    erlang:send_after(5000, self(), {full_ping}),
+    erlang:send_after(5000, self(), {start_all_tasks}),
     {ok, #state{running_tasks=[], finished_tasks=[]}}.
 
 
