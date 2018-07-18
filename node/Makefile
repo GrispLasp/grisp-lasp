@@ -51,10 +51,11 @@ tarball-build:
 
 clean: buildclean grispclean cacheclean
 	$(REBAR) clean
-	$(REBAR) unlock
+	# $(REBAR) unlock
 
 buildclean:
 	rm -rdf $(BASE_DIR)/_build
+	rm -rdf $(BASE_DIR)/_elixir_build
 
 grispclean:
 	rm -rdf $(BASE_DIR)/_grisp
