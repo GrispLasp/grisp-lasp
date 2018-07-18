@@ -30,7 +30,6 @@
 
 start(_StartType, _StartArgs) ->
     io:format("Application Master starting Node app ~n"),
-    % {ok, Supervisor} = node:start(node),
     case os:type() of % Check if application is ran on a grisp or a laptop
       {unix, darwin} -> os:putenv("type", "laptop");
       {unix, linux} -> os:putenv("type", "laptop");
@@ -42,11 +41,13 @@ start(_StartType, _StartArgs) ->
   	{ok, _Started} = application:ensure_all_started(lasp),
     T2 = erlang:monotonic_time(second),
     Time = T2 - T1,
+
     io:format("Time to start lasp partisan and node "
 	      "is approximately ~p seconds ~n",
 	      [Time]),
     {ok, Supervisor} = node:start(node),
     io:format("Application Master started Node app ~n"),
+
     LEDs = [1, 2],
     % [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
