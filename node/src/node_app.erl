@@ -36,7 +36,7 @@ start(_StartType, _StartArgs) ->
       {unix, linux} -> os:putenv("type", "laptop");
       _ -> os:putenv("type", "grisp")
     end,
-    {ok, Supervisor} = node:start(node),
+
     T1 = erlang:monotonic_time(second),
     % {ok, Supervisor} = node:start(all),
   	{ok, _Started} = application:ensure_all_started(lasp),
@@ -45,7 +45,6 @@ start(_StartType, _StartArgs) ->
     io:format("Time to start lasp partisan and node "
 	      "is approximately ~p seconds ~n",
 	      [Time]),
-
     {ok, Supervisor} = node:start(node),
     io:format("Application Master started Node app ~n"),
     LEDs = [1, 2],
