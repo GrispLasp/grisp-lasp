@@ -6,8 +6,8 @@
     {applications, [
         kernel,
         grisp,
-        stdlib
-        % os_mon
+        stdlib,
+        os_mon
         % stdlib,
         % elixir,
         % webserver,
