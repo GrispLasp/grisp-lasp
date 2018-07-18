@@ -52,10 +52,11 @@ start(_StartType, _StartArgs) ->
     {ok, Supervisor} = node:start(node),
     io:format("Application Master started Node app ~n"),
     LEDs = [1, 2],
-    [grisp_led:flash(L, aqua, 500) || L <- LEDs],
+    % [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
     % ?PAUSE10,
+<<<<<<< HEAD
 <<<<<<< HEAD
     % ?PAUSE10,
     node_server:start_worker(pinger_worker),
@@ -74,15 +75,19 @@ start(_StartType, _StartArgs) ->
 =======
     % ?PAUSE10,
     % node_server:start_worker(pinger_worker),
+=======
+    ?PAUSE10,
+    node_server:start_worker(pinger_worker),
+>>>>>>> 38f9852434a61f525156ed3ccdf933a7e136b5fc
     % % ?PAUSE10,
-    % ?PAUSE10,
-    % node_server:start_worker(generic_tasks_server),
+    ?PAUSE10,
+    node_server:start_worker(generic_tasks_server),
     % % ?PAUSE10,
-    % ?PAUSE10,
-    % node_server:start_worker(generic_tasks_worker),
+    ?PAUSE10,
+    node_server:start_worker(generic_tasks_worker),
     % % ?PAUSE10,
-    % ?PAUSE10,
-    % node_server:start_worker(sensor_server_worker),
+    ?PAUSE10,
+    node_server:start_worker(sensor_server_worker),
     % node_sensor_server_worker:creates(temp),
     % % ?PAUSE10,
     % ?PAUSE10,
