@@ -36,13 +36,10 @@ start(_StartType, _StartArgs) ->
       {unix, linux} -> os:putenv("type", "laptop");
       _ -> os:putenv("type", "grisp")
     end,
+    {ok, Supervisor} = node:start(node),
     T1 = erlang:monotonic_time(second),
     % {ok, Supervisor} = node:start(all),
-<<<<<<< HEAD
-    {ok, Supervisor} = node:start(node),
-=======
   	{ok, _Started} = application:ensure_all_started(lasp),
->>>>>>> adcccf9d1f7c2d857da54ed6311c52dfa4e1e5f6
     T2 = erlang:monotonic_time(second),
     Time = T2 - T1,
     io:format("Time to start lasp partisan and node "
@@ -56,8 +53,6 @@ start(_StartType, _StartArgs) ->
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
     % ?PAUSE10,
-<<<<<<< HEAD
-<<<<<<< HEAD
     % ?PAUSE10,
     node_server:start_worker(pinger_worker),
     % ?PAUSE10,
@@ -72,26 +67,6 @@ start(_StartType, _StartArgs) ->
     node_sensor_server_worker:creates(temp),
     % ?PAUSE10,
     % ?PAUSE10,
-=======
-    % ?PAUSE10,
-    % node_server:start_worker(pinger_worker),
-=======
-    ?PAUSE10,
-    node_server:start_worker(pinger_worker),
->>>>>>> 38f9852434a61f525156ed3ccdf933a7e136b5fc
-    % % ?PAUSE10,
-    ?PAUSE10,
-    node_server:start_worker(generic_tasks_server),
-    % % ?PAUSE10,
-    ?PAUSE10,
-    node_server:start_worker(generic_tasks_worker),
-    % % ?PAUSE10,
-    ?PAUSE10,
-    node_server:start_worker(sensor_server_worker),
-    % node_sensor_server_worker:creates(temp),
-    % % ?PAUSE10,
-    % ?PAUSE10,
->>>>>>> adcccf9d1f7c2d857da54ed6311c52dfa4e1e5f6
     % grisp:add_device(spi2, pmod_als),
     % ?PAUSE10,
     % ?PAUSE10,
