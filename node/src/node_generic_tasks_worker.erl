@@ -205,8 +205,8 @@ get_device() ->
 	os:getenv("type").
 
 can_run_task(RunningTasksCount) ->
-	CpuLoad = get_cpu_load(),
-	io:format("=== CPU load ~.3f ===~n",[CpuLoad]),
+	CpuLoad = cpu_sup:util(),
+	io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
 	DeviceType = get_device(),
 	io:format("=== Device is ~p ===~n",[DeviceType]),
 	TresholdReached = case DeviceType of
