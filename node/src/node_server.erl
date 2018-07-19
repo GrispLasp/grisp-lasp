@@ -74,6 +74,13 @@
 	  shutdown => brutal_kill,
 	  modules => [node_stream_worker]}).
 
+-define(NODE_UTILS_SPEC,
+	#{id => node_utils_server,
+	  start => {node_utils_server, start_link, []},
+	  restart => permanent, type => worker,
+	  shutdown => brutal_kill,
+	  modules => [node_utils_server]}).
+
 %% Records
 -record(state, {worker_sup, workers}).
 
@@ -111,7 +118,8 @@ get_worker_specs_map() ->
       pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
       node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
       node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
-      sensor_client_worker => ?SENSOR_CLIENT_SPEC}.
+      sensor_client_worker => ?SENSOR_CLIENT_SPEC,
+			node_utils_server => ?NODE_UTILS_SPEC}.
 
 %% ===================================================================
 %% Gen Server callbacks

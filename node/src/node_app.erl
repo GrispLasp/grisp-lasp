@@ -36,6 +36,7 @@ start(_StartType, _StartArgs) ->
       _ -> os:putenv("type", "grisp")
     end,
 
+
     T1 = erlang:monotonic_time(second),
     % {ok, Supervisor} = node:start(all),
   	{ok, _Started} = application:ensure_all_started(lasp),
@@ -52,6 +53,9 @@ start(_StartType, _StartArgs) ->
     % [grisp_led:flash(L, aqua, 500) || L <- LEDs],
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
+    % ?PAUSE10,
+    % ?PAUSE10,
+    node_server:start_worker(node_utils_server),
     % ?PAUSE10,
     % ?PAUSE10,
     node_server:start_worker(pinger_worker),
