@@ -25,15 +25,22 @@ VERSION 	       ?= 0.1.0
 
 # .PHONY: grispbuild rel deps test plots dcos logs fpm no-cfg-build tarball-build build
 
+.PHONY: compile shell deploy rel stage \
+	# cleaning targets :
+	clean buildclean grispclean cacheclean elixirclean ⁠\
+	# currently not working targets :
+	build no-cfg-build tarball-build
+
 all: compile
 
 ##
 ## Compilation targets
 ##
 
-.PHONY: compile build clean buildclean grispclean cacheclean shell deploy no-cfg-build tarball-build
+
 compile:
 	$(REBAR) compile
+
 # rebar3_grisp build call to sh(./otp_build boot -a) forces single directory change that make cannot overwrite
 # open issue?
 build:
@@ -49,21 +56,25 @@ tarball-build:
 # Cleaning targets
 #
 
-clean: buildclean grispclean cacheclean
+clean: buildclean grispclean elixirclean cacheclean
 	$(REBAR) clean
-	# $(REBAR) unlock
+	$(REBAR) update
+	$(REBAR) unlock
+	$(REBAR) upgrade
 
 buildclean:
 	rm -rdf $(BASE_DIR)/_build
-	rm -rdf $(BASE_DIR)/_elixir_build
 
 grispclean:
 	rm -rdf $(BASE_DIR)/_grisp
 
+elixirclean:
+	$(foreach var,$(shell find $(BASE_DIR)/elixir_libs/ -type d -name "_build"),rm -rdf $(var);)
+	rm -rdf $(BASE_DIR)/_elixir_build
+
 cacheclean:
 	rm -rdf $(CACHE_DIR)/hex
 	rm -rdf $(CACHE_DIR)/plugins/rebar3_grisp
-	$(REBAR) update
 
 #
 # Test targets
@@ -72,24 +83,16 @@ cacheclean:
 shell:
 	$(REBAR) as test shell --sname $(GRISPAPP) --setcookie $(COOKIE)
 
-# lasp-shell:
-# 	$(REBAR) shell --apps lasp --name lasp@localhost
-
 
 ##
 ## Release targets
 ##
 
-# rel:
-# 	${REBAR} release
-#
-# stage:
-# 	${REBAR} release -d
-#
-# grispbuild:
-# 	# ${REBAR} grisp build -c false skip_deps=true
-# 	DEBUG=1 ${REBAR} grisp build
-#
+rel:
+	$(REBAR) release
+
+stage:
+	$(REBAR) release -d
 
 deploy:
 	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)

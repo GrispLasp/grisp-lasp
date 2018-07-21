@@ -4,7 +4,7 @@
   {git,"https://github.com/erlang/epmd",
        {ref,"4d1a595b9d5c32fc0e55f462da381de62de23bf0"}},
   0},
- {<<"flow">>,{elixir,<<"flow">>,<<"0.14.0">>},0},
+ {<<"flow">>,{elixir,<<"flow">>,<<"0.14.1">>},0},
  {<<"gen_flow">>,{pkg,<<"gen_flow">>,<<"0.0.5">>},1},
  {<<"gen_stage">>,{elixir,<<"gen_stage">>,<<"0.14.0">>},0},
  {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},1},
