@@ -20,69 +20,40 @@
 %% Application callbacks
 -export([start/2, stop/1]).
 
--compile({nowarn_unused_function}).
+%% test call to Numerix
+-export([myfit/0]).
+
+
 
 %%====================================================================
 %% API
 %%====================================================================
-% TODO : find a way to get rid of lager, see commit below
+% TODO : find a way to exclude lager everywhere?, see commit below
 % https://github.com/lasp-lang/lasp/pull/295/commits/e2f948f879145a5ff31cf5458201768ca97b406b
 
 start(_StartType, _StartArgs) ->
     io:format("Application Master starting Node app ~n"),
-    case os:type() of % Check if application is ran on a grisp or a laptop
-      {unix, darwin} -> os:putenv("type", "laptop");
-      {unix, linux} -> os:putenv("type", "laptop");
-      _ -> os:putenv("type", "grisp")
-    end,
-
-
-    T1 = erlang:monotonic_time(second),
-    % {ok, Supervisor} = node:start(all),
-  	{ok, _Started} = application:ensure_all_started(lasp),
-    T2 = erlang:monotonic_time(second),
-    Time = T2 - T1,
-
-    io:format("Time to start lasp partisan and node "
-	      "is approximately ~p seconds ~n",
-	      [Time]),
     {ok, Supervisor} = node:start(node),
+    % application:ensure_all_started(os_mon),
+    node_util:set_platform(),
+
+    start_timed_apps(),
+
     io:format("Application Master started Node app ~n"),
+    start_primary_workers(primary_workers),
+    start_primary_workers(distributed_workers),
+    add_measurements(),
+
+    % Adding a new task in Lasp :
+    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
+    node_generic_tasks_worker:start_task(task1),
 
     LEDs = [1, 2],
-    % [grisp_led:flash(L, aqua, 500) || L <- LEDs],
+    [grisp_led:flash(L, aqua, 500) || L <- LEDs],
+
     PeerConfig = lasp_partisan_peer_service:manager(),
     io:format("The manager used is ~p ~n", [PeerConfig]),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    node_server:start_worker(node_utils_server),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    node_server:start_worker(pinger_worker),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    node_server:start_worker(generic_tasks_server),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    node_server:start_worker(generic_tasks_worker),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    node_server:start_worker(sensor_server_worker),
-    node_sensor_server_worker:creates(temp),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    % grisp:add_device(spi2, pmod_als),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    % {ok, _Worker} =	node_server:start_worker(node_stream_worker),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    % node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
-    % node_generic_tasks_worker:start_task(task1),
-    % node_sensor_server_worker:creates(temp),
-    % ?PAUSE10,
-    % ?PAUSE10,
-    % run(),
+
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
@@ -94,40 +65,52 @@ stop(_State) ->
 %% Internal functions
 %%====================================================================
 
-% run() -> spawn_link(fun () -> process(1) end).
-run() -> spawn_link(fun () -> node_generic_tasks_worker:leds() end).
+start_primary_workers(Workers) ->
+    PrimaryWorkers = node_config:get(Workers, []),
+    lists:foreach(fun(Worker) ->
+                    node_server:start_worker(Worker)
+                  end, PrimaryWorkers),
+    node_util:printer(PrimaryWorkers, workers).
 
-%%--------------------------------------------------------------------
+add_measurements() ->
+    Measurements = node_config:get(node_sensor_server_worker_measurements, []),
+    lists:foreach(fun(Type) ->
+      node_sensor_server_worker:creates(Type)
+    end, Measurements),
+    node_util:printer(Measurements, measurements).
 
-process(N) ->
-    ?PAUSEHMIN,
-    Epoch = (?HMIN) * N,
-    io:format("Data after = ~p seconds ~n", [?TOS(Epoch)]),
-    {ok, Lum} = lasp:query({<<"als">>, state_orset}),
-    ?PAUSE3,
-    LumList = sets:to_list(Lum),
-    ?PAUSE3,
-    {ok, MS} = lasp:query({<<"maxsonar">>, state_orset}),
-    Sonar = sets:to_list(MS),
-    ?PAUSE3,
-    {ok, Gyr} = lasp:query({<<"gyro">>, state_orset}),
-    Gyro = sets:to_list(Gyr),
-    io:format("Raw ALS Data ~n"),
-    printer(LumList, luminosity),
-    io:format("Raw Sonar Data ~n"),
-    printer(Sonar, sonar),
-    io:format("Raw Gyro Data ~n"),
-    printer(Gyro, gyro),
-    process(N + 1).
+%% https://github.com/SpaceTime-IoT/erleans/blob/5ee956c3bc656558d56e611ca2b8b75b33ba0962/src/erleans_app.erl#L46
+start_timed_apps() ->
+  Apps = node_config:get(timed_apps, []),
+  T1 = erlang:monotonic_time(second),
+  Started = lists:foldl(fun(App, Acc) ->
+                  case application:ensure_all_started(App) of
+                      {ok, Deps} ->
+                          [Deps | Acc];
+                      {error, Reason} ->
+                          logger:error("Could not start application
+                            ~s: reason=~p", [App, Reason]),
+                          Acc
+                  end
+                end, [], Apps),
+              T2 = erlang:monotonic_time(second),
+              Time = T2 - T1,
+              io:format("Time to start ~p"
+              "is approximately ~p seconds ~n",
+              [Started, Time]).
 
-%%--------------------------------------------------------------------
 
-printer([], Arg) ->
-    io:format("nothing left to print for ~p ~n", [Arg]);
-printer([H], Arg) ->
-    io:format("Elem = ~p ~n", [H]),
-    io:format("done printing ~p ~n", [Arg]);
-printer([H | T], Arg) ->
-    ?PAUSEMS,
-    io:format("Elem = ~p ~n", [H]),
-    printer(T, Arg).
+%%====================================================================
+%% Useful snippets
+%%====================================================================
+
+myfit() ->
+  {Intercept, Slope} = 'Elixir.Numerix.LinearRegression':fit([1.3, 2.1, 3.7, 4.2], [2.2, 5.8, 10.2, 11.8]),
+  {Intercept, Slope}.
+
+% Adding a new task in Lasp :
+% node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
+% node_generic_tasks_worker:start_task(task1),
+
+% Generate mock temperature measurements
+% node_sensor_server_worker:creates(temp),

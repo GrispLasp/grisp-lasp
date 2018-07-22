@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include("node.hrl").
+
 %% API
 -export([start_link/1, start_worker/1, stop/0,
 	 terminate_worker/1]).
@@ -11,78 +13,6 @@
 %% Gen Server Callbacks
 -export([code_change/3, handle_call/3, handle_cast/2,
 	 handle_info/2, init/1, terminate/2]).
-
-%% Macros
--define(NODE_WORKER_SUP_SPEC,
-	#{id => node_worker_sup,
-	  start => {node_worker_sup, start_link, []},
-	  restart => temporary, type => supervisor,
-	  shutdown => 15000, modules => [node_worker_sup]}).
-
--define(PINGER_SPEC,
-	#{id => node_ping_worker,
-	  start => {node_ping_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_ping_worker]}).
-
--define(SENSOR_SERVER_SPEC,
-	#{id => node_sensor_server_worker,
-	  start => {node_sensor_server_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_sensor_server_worker]}).
-
--define(SENSOR_CLIENT_SPEC,
-	#{id => node_sensor_client_worker,
-	  start => {node_sensor_client_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_sensor_client_worker]}).
-
--define(GENERIC_SERVER_SPEC,
-	#{id => node_generic_server_worker,
-	  start => {node_generic_server_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_generic_server_worker]}).
-
--define(GENERIC_TASKS_SERVER_SPEC,
-	#{id => node_generic_tasks_server,
-	  start => {node_generic_tasks_server, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_generic_tasks_server]}).
-
--define(PMOD_ALS_WORKER_SPEC,
-	#{id => pmod_als_worker,
-	  start => {pmod_als_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill, modules => [pmod_als_worker]}).
-
--define(GENERIC_TASKS_WORKER_SPEC,
-	#{id => node_generic_tasks_worker,
-	  start => {node_generic_tasks_worker, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_generic_tasks_worker]}).
-
--define(NODE_STREAM_WORKER_SPEC(Mode),
-	#{id => node_stream_worker,
-	  start => {node_stream_worker, start_link, [Mode]},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_stream_worker]}).
-
--define(NODE_UTILS_SPEC,
-	#{id => node_utils_server,
-	  start => {node_utils_server, start_link, []},
-	  restart => permanent, type => worker,
-	  shutdown => brutal_kill,
-	  modules => [node_utils_server]}).
-
-%% Records
--record(state, {worker_sup, workers}).
 
 %% ===================================================================
 %% API functions
@@ -106,22 +36,6 @@ terminate_worker(Pid) ->
     gen_server:call(node_server, {terminate_worker, Pid}).
 
 %% ===================================================================
-%% Private functions
-%% ===================================================================
-
-get_worker_specs_map() ->
-    #{generic_worker => ?GENERIC_SERVER_SPEC,
-      generic_tasks_server => ?GENERIC_TASKS_SERVER_SPEC,
-      generic_tasks_worker => ?GENERIC_TASKS_WORKER_SPEC,
-      pinger_worker => ?PINGER_SPEC,
-      sensor_server_worker => ?SENSOR_SERVER_SPEC,
-      pmod_als_worker => ?PMOD_ALS_WORKER_SPEC,
-      node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
-      node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
-      sensor_client_worker => ?SENSOR_CLIENT_SPEC,
-			node_utils_server => ?NODE_UTILS_SPEC}.
-
-%% ===================================================================
 %% Gen Server callbacks
 %% ===================================================================
 
@@ -135,13 +49,13 @@ init(NodeSup) ->
       {Supervisor, _Sensors} ->
 	  self() ! {start_worker_supervisor, Supervisor}
     end,
-    {ok, #state{workers = gb_sets:empty()}}.
+    {ok, #server_state{workers = gb_sets:empty()}}.
 
 handle_call({start_worker, WorkerType}, _From,
-	    S = #state{worker_sup = WorkerSup, workers = W}) ->
+	    S = #server_state{worker_sup = WorkerSup, workers = W}) ->
     io:format("=== Starting new worker (~p) ===~n",
 	      [WorkerType]),
-    case maps:get(WorkerType, get_worker_specs_map()) of
+    case maps:get(WorkerType, ?WORKER_SPECS_MAP) of
       {badkey, _} ->
 	  io:format("=== Worker Type not found in map ===~n"),
 	  {reply, {badkey, worker_type_not_exist}, S};
@@ -152,10 +66,10 @@ handle_call({start_worker, WorkerType}, _From,
 					     ChildSpec),
 	  Ref = erlang:monitor(process, Pid),
 	  {reply, {ok, Pid},
-	   S#state{workers = gb_sets:add(Ref, W)}}
+	   S#server_state{workers = gb_sets:add(Ref, W)}}
     end;
 handle_call({terminate_worker, WorkerPid}, _From,
-	    S = #state{worker_sup = WorkerSup}) ->
+	    S = #server_state{worker_sup = WorkerSup}) ->
     io:format("=== Terminate worker (~p) ===~n",
 	      [WorkerPid]),
     case supervisor:terminate_child(WorkerSup, WorkerPid) of
@@ -172,7 +86,7 @@ handle_call(_Msg, _From, S) -> {noreply, S}.
 handle_cast(_Msg, S) -> {noreply, S}.
 
 handle_info({start_worker_supervisor, NodeSup},
-	    S = #state{}) ->
+	    S = #server_state{}) ->
     io:format("=== Start Node Worker Supervisor ===~n"),
     {ok, WorkerSupPid} = supervisor:start_child(NodeSup,
 						?NODE_WORKER_SUP_SPEC),
@@ -180,16 +94,16 @@ handle_info({start_worker_supervisor, NodeSup},
     io:format("=== PID of Node Worker Supervisor ~p "
 	      "===~n",
 	      [WorkerSupPid]),
-    {noreply, S#state{worker_sup = WorkerSupPid}};
+    {noreply, S#server_state{worker_sup = WorkerSupPid}};
 handle_info({'DOWN', Ref, process, Pid, Info},
-	    S = #state{workers = Refs}) ->
+	    S = #server_state{workers = Refs}) ->
     io:format("=== Worker ~p is dead (because of ~p), "
 	      "removing him from workers set ===~n",
 	      [Pid, Info]),
     case gb_sets:is_element(Ref, Refs) of
       true ->
 	  erlang:demonitor(Ref),
-	  {noreply, S#state{workers = gb_sets:delete(Ref, Refs)}};
+	  {noreply, S#server_state{workers = gb_sets:delete(Ref, Refs)}};
       false -> {noreply, S}
     end;
 handle_info({'EXIT', _From, Reason}, S) ->
@@ -215,3 +129,8 @@ terminate(Reason, _S) ->
     ok.
 
 code_change(_OldVsn, S, _Extra) -> {ok, S}.
+
+
+%% ===================================================================
+%% Internal functions
+%% ===================================================================

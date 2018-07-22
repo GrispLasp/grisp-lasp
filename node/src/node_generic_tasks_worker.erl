@@ -1,12 +1,13 @@
 -module(node_generic_tasks_worker).
 -behaviour(gen_server).
 
+-include_lib("node.hrl").
+
 %% API
 -export([start_link/0, find_and_start_task/0, start_task/1, start_all_tasks/0, isRunning/1, stop/0]).
 
 %% Gen Server Callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
-
 
 %% Records
 -record(state, {running_tasks, finished_tasks}).
@@ -198,15 +199,22 @@ code_change(_OldVsn, State, _Extra) ->
 %%====================================================================
 
 get_cpu_load() ->
-	Load = cpu_sup:avg1(),
+	% Load = cpu_sup:avg1(),
+	Load = 5,
 	PercentLoad = 100 * (1 - 50/(50 + Load)).
 
 get_device() ->
 	os:getenv("type").
 
 can_run_task(RunningTasksCount) ->
-	CpuLoad = cpu_sup:util(),
-	io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
+	% CpuLoad = cpu_sup:util(),
+  % Scheduler loads :
+  % [Total|SchedulerLoads] = node_util:utilization_sample(),
+  % {total, CpuLoadFloat, CpuLoadPercent} = Total,
+  % CpuLoad = CpuLoadFloat * 100,
+  % CpuLoad = gen_server:call(node_utils_server, {get_sysload}),
+  {ok, CpuLoad} = node_utils_server:get_cpu_usage(), 
+  io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
 	DeviceType = get_device(),
 	io:format("=== Device is ~p ===~n",[DeviceType]),
 	TresholdReached = case DeviceType of

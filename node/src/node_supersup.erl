@@ -131,10 +131,6 @@ init([]) ->
 %     {ok,
 %      {SupFlags, [?PARTISAN_SPEC, ?LASP_SPEC, ?NODE_SPEC]}};
 
-% Lasp set in deps implies partisan is started at all times
-% crashes due to attempting to alter Lasp's startup and supervision?
-% app crashes infitely due to inet_gethost 4
-% since partisan_hyparview_peer_service_manager cannot be initialized
 init(all) ->
     SupFlags = #{strategy => rest_for_one, intensity => 1,
 		 period => 20},
@@ -143,5 +139,4 @@ init(all) ->
 init(node) ->
     SupFlags = #{strategy => one_for_one, intensity => 1,
 		 period => 10},
-	% {ok, _Started} = application:ensure_all_started(lasp),
     {ok, {SupFlags, [?NODE_SPEC]}}.
