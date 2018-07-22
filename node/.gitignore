@@ -1,4 +1,5 @@
 .rebar3
+!_checkouts/
 _*
 .eunit
 *.o
@@ -12,7 +13,7 @@ log
 erl_crash.dump
 .rebar
 logs
-_build
+_build/
 .idea
 rebar3.crashdump
 
@@ -22,4 +23,4 @@ _grisp
 !_checkouts/grisp/grisp_base/*
 
 # Partisan
-!_checkouts/partisan/src/*
+!_checkouts/partisan/src
