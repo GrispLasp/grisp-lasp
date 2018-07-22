@@ -19,8 +19,8 @@ rebar3.crashdump
 
 # GRiSP
 _grisp
-!_checkouts/grisp/src/*
-!_checkouts/grisp/grisp_base/*
+# !_checkouts/grisp/src/*
+# !_checkouts/grisp/grisp_base/*
 
 # Partisan
-!_checkouts/partisan/src
+# !_checkouts/partisan/src

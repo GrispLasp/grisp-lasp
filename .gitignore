@@ -6,6 +6,7 @@ node/rebar.config
 erl_crash.dump
 ebin
 rel/example_project
+!node/_checkouts/
 .concrete/DEV_MODE
 .rebar
 node/grisp/grisp_base/files/*
