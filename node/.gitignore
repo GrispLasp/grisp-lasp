@@ -1,6 +1,6 @@
 .rebar3
 !_checkouts/
-_*
+_elixir_build/
 .eunit
 *.o
 *.beam
@@ -18,7 +18,7 @@ _build/
 rebar3.crashdump
 
 # GRiSP
-_grisp
+_grisp/
 # !_checkouts/grisp/src/*
 # !_checkouts/grisp/grisp_base/*
 
