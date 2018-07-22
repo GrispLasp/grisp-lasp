@@ -15,11 +15,13 @@ logs
 _build
 .idea
 rebar3.crashdump
+doc/*.html
+doc/edoc-info
+doc/erlang.png
+doc/stylesheet.css
 
-# GRiSP
-_grisp
-!_checkouts/grisp/src/*
-!_checkouts/grisp/grisp_base/*
-
-# Partisan
-!_checkouts/partisan/src/*
+# QuickCheck
+.eqc-info
+.eqc
+cover
+*.eqc
