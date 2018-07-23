@@ -1,6 +1,8 @@
 -module(node_generic_tasks_server).
 -behaviour(gen_server).
 
+-include_lib("node.hrl").
+
 %% API
 -export([start_link/0, terminate/0, add_task/1, remove_all_tasks/0, remove_task/1, get_all_tasks/0, find_task/1]).
 
@@ -35,7 +37,10 @@ find_task(Name) -> gen_server:call(?MODULE, {find_task, Name}).
 
 init([]) ->
   io:format("Starting a generic tasks server ~n"),
-  process_flag(trap_exit, true), %% Ensure Gen Server gets notified when his supervisor dies
+  %% Ensure Gen Server gets notified when his supervisor dies
+  Vars = node_config:get(generic_tasks_sets_names, []),
+  node_util:declare_crdts(Vars),
+  process_flag(trap_exit, true),
   {ok, {}}.
 
 % TODO: add infinite execution of a task
@@ -78,7 +83,14 @@ handle_call({find_task, TaskName}, _From, State) ->
   {ok, Tasks} = lasp:query({<<"tasks">>, state_orset}),
   TasksList = sets:to_list(Tasks),
   Task = [{Name, Targets, Fun} || {Name, Targets, Fun} <- TasksList, Name =:= TaskName],
-  {reply, Task, State};
+  case length(Task) of
+    0 ->
+      {reply, task_not_found, State};
+    1 ->
+      {reply, {ok, hd(Task)}, State};
+    _ ->
+      {reply, more_than_one_task, State}
+  end;
 
 handle_call(stop, _From, State) ->
   {stop, normal, ok, State}.
@@ -96,3 +108,8 @@ terminate(Reason, _S) ->
 
 code_change(_OldVsn, S, _Extra) ->
   {ok, S}.
+
+
+%%====================================================================
+%% Internal Functions
+%%====================================================================

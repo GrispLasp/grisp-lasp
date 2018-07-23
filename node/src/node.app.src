@@ -5,8 +5,19 @@
     {mod, {node_app, []}},
     {applications, [
         kernel,
+        stdlib,
         grisp,
-        stdlib
+        sasl,
+        % os_mon
+        % grisp,
+        % os_mon,
+        % sasl,
+        elixir,
+        gen_stage,
+        flow,
+        numerix
+        % webserver,
+        % faker
     ]},
     {env,[]},
     {modules, []},
