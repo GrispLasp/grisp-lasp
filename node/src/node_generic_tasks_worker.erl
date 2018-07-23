@@ -10,7 +10,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% Records
--record(state, {running_tasks, finished_tasks}).
+-record(state, {running_tasks = [],
+                finished_tasks = [],
+                restart_interval = node_config:get(generic_tasks_restart_interval, ?MIN)}).
 
 
 %% ===================================================================
@@ -47,8 +49,10 @@ stop() ->
 
 init({}) ->
     io:format("Initializing Node Server~n"),
+    % RestartInterval = node_config:get(generic_tasks_restart_interval, ?MIN),
     erlang:send_after(5000, self(), {start_all_tasks}),
-    {ok, #state{running_tasks=[], finished_tasks=[]}}.
+    {ok, #state{}}.
+    % {ok, #state{running_tasks=[], finished_tasks=[], restart_interval = RestartInterval}}.
 
 
 
@@ -56,7 +60,8 @@ handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks
     io:format("=== State is ~p ===~n", [State]),
     io:format("=== Finding task ~p ===~n", [Name]),
         Len = lists:flatlength(RunningTasks),
-		% CanRunTask = can_run_task(length(RunningTasks)),
+
+        % CanRunTask = can_run_task(length(RunningTasks)),
 		CanRunTask = can_run_task(Len),
 		case CanRunTask of
 			true ->
@@ -80,12 +85,13 @@ handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks
 			end;
 
 
-handle_call({find_and_start_task}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+handle_call({find_and_start_task}, _From, State = #state{running_tasks=RTasks, finished_tasks=FinishedTasks}) ->
+    RunningTasks = maybe_tuple_to_list(RTasks),
     io:format("=== State is ~p ===~n", [State]),
     io:format("=== Finding new task ===~n"),
     TasksList = node_generic_tasks_server:get_all_tasks(),
     io:format("=== Tasks list ~p ===~n", [TasksList]),
-    FilteredTaskList = filter_task_list(TasksList, RunningTasks),
+    FilteredTaskList = filter_task_list(TasksList, TasksList),
     io:format("=== FilteredTaskList ~p ===~n",[FilteredTaskList]),
     FilteredTaskListLen = lists:flatlength(FilteredTaskList),
     % case length(FilteredTaskList) of
@@ -93,7 +99,7 @@ handle_call({find_and_start_task}, _From, State = #state{running_tasks=RunningTa
       0 ->
         {reply, no_tasks_to_run, State};
       _ ->
-        RunningTaskListLen = lists:flatlength(RunningTasks),
+        RunningTaskListLen = lists:flatlength(),
         % RandomTaskIndex = rand:uniform(length(FilteredTaskList)),
         RandomTaskIndex = rand:uniform(FilteredTaskListLen),
         RandomTask = lists:nth(RandomTaskIndex, FilteredTaskList),
@@ -124,9 +130,6 @@ handle_call({isRunning, TaskName}, _From, State = #state{running_tasks=RunningTa
     _ -> {reply, more_than_one_task, State}
   end;
 
-
-
-
 handle_call(stop, _From, State) ->
   {stop, normal, ok, State};
 
@@ -136,23 +139,29 @@ handle_call(_Msg, _From, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-handle_info({start_all_tasks}, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+handle_info({start_all_tasks}, State =
+        #state{running_tasks=RunningTasks,
+        finished_tasks=FinishedTasks,
+        restart_interval=RestartInterval}) ->
     case start_all_tasks_periodically(RunningTasks, FinishedTasks) of
       {ko, no_tasks_to_run} ->
         io:format("=== No tasks to run ===~n"),
-        {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, 60000};
+        {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
       {NewRunningTasksList, NewFinishedTasksList} ->
-        {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, 60000}
+        {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
       end;
 
 
-handle_info(timeout, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
+handle_info(timeout, State =
+        #state{running_tasks=RunningTasks,
+        finished_tasks=FinishedTasks,
+        restart_interval=RestartInterval}) ->
   case start_all_tasks_periodically(RunningTasks, FinishedTasks) of
     {ko, no_tasks_to_run} ->
       io:format("=== No tasks to run ===~n"),
-      {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, 60000};
+      {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
     {NewRunningTasksList, NewFinishedTasksList} ->
-      {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, 60000}
+      {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
     end;
 
 
@@ -214,12 +223,6 @@ get_device() ->
 	os:getenv("type").
 
 can_run_task(RunningTasksCount) ->
-	% CpuLoad = cpu_sup:util(),
-  % Scheduler loads :
-  % [Total|SchedulerLoads] = node_util:utilization_sample(),
-  % {total, CpuLoadFloat, CpuLoadPercent} = Total,
-  % CpuLoad = CpuLoadFloat * 100,
-  % CpuLoad = gen_server:call(node_utils_server, {get_sysload}),
   {ok, CpuLoad} = node_utils_server:get_cpu_usage(),
   io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
 	DeviceType = get_device(),
@@ -241,9 +244,13 @@ can_run_task(RunningTasksCount) ->
 	CanRun.
 
 
-filter_task_list(TasksList, RunningTasks) ->
-  FilteredTaskList = lists:filter(
-  fun ({Name, Targets, _}) ->
+filter_task_list(TasksList, RTasks) ->
+    RunningTasks = maybe_tuple_to_list(RTasks),
+    lager:info("Task List in filter_task_list = ~p ~n ", [TasksList]),
+    lager:info("Running List in filter_task_list = ~p ~n ", [RunningTasks]),
+
+    FilteredTaskList = lists:filter(
+    fun ({Name, Targets, _}) ->
     IsTarget = case Targets of
       all -> true;
       List -> lists:member(node(), List)
@@ -263,8 +270,8 @@ filter_task_list(TasksList, RunningTasks) ->
        true -> false
     end,
     IsCanditate
-  end , TasksList),
-  FilteredTaskList.
+    end , TasksList),
+    FilteredTaskList.
 
 start_all_tasks_periodically(RunningTasks, FinishedTasks) ->
   io:format("=== Finding new task ===~n"),
@@ -297,3 +304,11 @@ start_all_tasks_periodically(RunningTasks, FinishedTasks) ->
       NewRunningTasksList = element(2, StartedTasks),
       {NewRunningTasksList, NewFinishedTasksList}
 end.
+
+maybe_tuple_to_list(Var) ->
+    case is_tuple(Var) of
+        true ->
+            tuple_to_list(Var);
+        false when is_list(Var) ->
+            Var
+    end.
