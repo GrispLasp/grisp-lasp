@@ -6,16 +6,16 @@
     {applications, [
         kernel,
         stdlib,
+        grisp,
         sasl,
-        grisp
         % os_mon
         % grisp,
-        % sasl,
         % os_mon,
-        % elixir,
-        % gen_stage,
-        % flow,
-        % numerix
+        % sasl,
+        elixir,
+        gen_stage,
+        flow,
+        numerix
         % webserver,
         % faker
     ]},

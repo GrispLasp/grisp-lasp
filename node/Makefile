@@ -27,7 +27,7 @@ VERSION 	       ?= 0.1.0
 
 .PHONY: compile shell deploy rel stage \
 	# cleaning targets :
-	clean buildclean grispclean cacheclean elixirclean ⁠\
+	clean buildclean grispclean cacheclean elixirclean checkoutsclean ⁠\
 	# currently not working targets :
 	build no-cfg-build tarball-build
 
@@ -56,7 +56,7 @@ tarball-build:
 # Cleaning targets
 #
 
-clean: buildclean grispclean elixirclean cacheclean
+clean: buildclean grispclean elixirclean checkoutsclean cacheclean
 	$(REBAR) clean
 	$(REBAR) update
 	$(REBAR) unlock
@@ -75,7 +75,8 @@ elixirclean:
 cacheclean:
 	rm -rdf $(CACHE_DIR)/hex
 	rm -rdf $(CACHE_DIR)/plugins/rebar3_grisp
-
+checkoutsclean:
+	rm -rdf $(BASE_DIR)/_checkouts/*/ebin/*
 #
 # Test targets
 #

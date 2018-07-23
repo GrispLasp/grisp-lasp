@@ -39,39 +39,29 @@ init([]) ->
 		% {ok, State, 5000}.
 		{ok, State}.
 
-% handle_call({get_cpu_usage}, _From, State = #samples_state{s1 = S1}) ->
-% 		S2 = scheduler:sample_all(),
-% 		Schedulers = node_util:utilization_sample(S1,S2),
-% 		[Total|Scheds] = Schedulers,
-% 		io:format("=== Getting first CPU usage: ~p ===~n", [Total]),
-% 		% io:format("=== Getting CPU usage since last util() call: ~p ===~n", [cpu_sup:util()]),
-% 		{total, Load, Percentage} = Total,
-% 		NewState = #samples_state{s1 = S2, sysload = Load * 100},
-% 		% cpu_sup:util(),
-% 		{reply, get_cpu_usage, NewState};
-
-handle_call({get_cpu_usage}, _From, State = #samples_state{s1 = S1, sysload = Load}) ->
-  	{reply, {ok, Load}, State};
+handle_call({get_cpu_usage}, From, _State = #samples_state{s1 = S1, sysload = _Load}) ->
+	S2 = scheduler:sample_all(),
+	[Total|_Schedulers] = node_util:utilization_sample(S1,S2),
+	io:format("=== Getting CPU usage : ~p ===~n", [Total]),
+	{total, NewLoad, _Percentage} = Total,
+	NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
+	Self = self(),
+	case From of
+		Self ->
+			{noreply, NewState};
+		_ ->
+			{reply, {ok, NewLoad}, NewState}
+	end;
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State}.
 
-% handle_info(timeout, State = #samples_state{s1 = S1}) ->
-% 		S2 = scheduler:sample_all(),
-% 		Schedulers = node_util:utilization_sample(S1,S2),
-% 		[Total|Scheds] = Schedulers,
-% 		io:format("=== Getting first CPU usage: ~p ===~n", [Total]),
-%     % io:format("=== Getting CPU usage since last util() call: ~p ===~n", [cpu_sup:util()]),
-% 		{total, Load, Percentage} = Total,
-% 		NewState = #samples_state{s1 = S2, sysload = Load * 100},
-% 		% cpu_sup:util(),
-%     {reply, get_cpu_usage, NewState};
-%
-handle_info({get_cpu_usage}, State = #samples_state{s1 = S1, sysload = Load}) ->
+handle_info({get_cpu_usage}, _State = #samples_state{s1 = S1, sysload = _Load}) ->
 		S2 = scheduler:sample_all(),
-		[Total|Schedulers] = node_util:utilization_sample(S1,S2),
+		[Total|_Schedulers] = node_util:utilization_sample(S1,S2),
 		io:format("=== Getting CPU usage since last util() call: ~p ===~n", [Total]),
-		{total, NewLoad, Percentage} = Total,
+		{total, NewLoad, _Percentage} = Total,
 		NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
+		erlang:send_after(5000, self(), {get_cpu_usage}),
     {noreply, NewState};
 
 handle_info(Msg, State) ->

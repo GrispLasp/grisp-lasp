@@ -37,6 +37,9 @@ start(_StartType, _StartArgs) ->
     % application:ensure_all_started(os_mon),
     node_util:set_platform(),
 
+    % {ok, F} = file:open("z", [write]),
+    % group_leader(F, self()),
+    % io:format("Where am I going to appear?~n"),
     start_timed_apps(),
 
     io:format("Application Master started Node app ~n"),
@@ -45,7 +48,8 @@ start(_StartType, _StartArgs) ->
     add_measurements(),
 
     % Adding a new task in Lasp :
-    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
+    Interval = node_config:get(temp_stream_interval, ?HMIN),
+    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
     node_generic_tasks_worker:start_task(task1),
 
     LEDs = [1, 2],
@@ -98,7 +102,6 @@ start_timed_apps() ->
               io:format("Time to start ~p"
               "is approximately ~p seconds ~n",
               [Started, Time]).
-
 
 %%====================================================================
 %% Useful snippets

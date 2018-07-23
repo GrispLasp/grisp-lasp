@@ -55,7 +55,9 @@ init({}) ->
 handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
     io:format("=== State is ~p ===~n", [State]),
     io:format("=== Finding task ~p ===~n", [Name]),
-		CanRunTask = can_run_task(length(RunningTasks)),
+        Len = lists:flatlength(RunningTasks),
+		% CanRunTask = can_run_task(length(RunningTasks)),
+		CanRunTask = can_run_task(Len),
 		case CanRunTask of
 			true ->
 		    Task = node_generic_tasks_server:find_task(Name),
@@ -85,13 +87,18 @@ handle_call({find_and_start_task}, _From, State = #state{running_tasks=RunningTa
     io:format("=== Tasks list ~p ===~n", [TasksList]),
     FilteredTaskList = filter_task_list(TasksList, RunningTasks),
     io:format("=== FilteredTaskList ~p ===~n",[FilteredTaskList]),
-    case length(FilteredTaskList) of
+    FilteredTaskListLen = lists:flatlength(FilteredTaskList),
+    % case length(FilteredTaskList) of
+    case FilteredTaskListLen of
       0 ->
         {reply, no_tasks_to_run, State};
       _ ->
-        RandomTaskIndex = rand:uniform(length(FilteredTaskList)),
+        RunningTaskListLen = lists:flatlength(RunningTasks),
+        % RandomTaskIndex = rand:uniform(length(FilteredTaskList)),
+        RandomTaskIndex = rand:uniform(FilteredTaskListLen),
         RandomTask = lists:nth(RandomTaskIndex, FilteredTaskList),
-        CanRunTask = can_run_task(length(RunningTasks)),
+        % CanRunTask = can_run_task(length(RunningTasks)),
+        CanRunTask = can_run_task(RunningTaskListLen),
         case CanRunTask of
           true ->
             NewFinishedTasksList = FinishedTasks -- [RandomTask],
@@ -111,7 +118,7 @@ handle_call({find_and_start_task}, _From, State = #state{running_tasks=RunningTa
 
 handle_call({isRunning, TaskName}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=_}) ->
   TaskRunning = [{Name, Targets, Fun, {TaskPid, TaskRef}} || {Name, Targets, Fun, {TaskPid, TaskRef}} <- RunningTasks, Name =:= TaskName],
-  case length(TaskRunning) of
+  case lists:flatlength(TaskRunning) of
     0 -> {reply, false, State};
     1 -> {reply, true, State};
     _ -> {reply, more_than_one_task, State}
@@ -153,7 +160,7 @@ handle_info(timeout, State = #state{running_tasks=RunningTasks, finished_tasks=F
 handle_info({'DOWN', Ref, process, Pid, Info}, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
     io:format("== Pid ~p has ended ===~n", [Pid]),
     RunningTasksList = [{Name, Targets, Fun, {TaskPid, TaskRef}} || {Name, Targets, Fun, {TaskPid, TaskRef}} <- RunningTasks, TaskPid =:= Pid],
-    case length(RunningTasksList) of
+    case lists:flatlength(RunningTasksList) of
       0 ->
         io:format("=== A process other than a task finished ===~n"),
         {noreply, State};
@@ -213,7 +220,7 @@ can_run_task(RunningTasksCount) ->
   % {total, CpuLoadFloat, CpuLoadPercent} = Total,
   % CpuLoad = CpuLoadFloat * 100,
   % CpuLoad = gen_server:call(node_utils_server, {get_sysload}),
-  {ok, CpuLoad} = node_utils_server:get_cpu_usage(), 
+  {ok, CpuLoad} = node_utils_server:get_cpu_usage(),
   io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
 	DeviceType = get_device(),
 	io:format("=== Device is ~p ===~n",[DeviceType]),
@@ -241,7 +248,7 @@ filter_task_list(TasksList, RunningTasks) ->
       all -> true;
       List -> lists:member(node(), List)
     end,
-    TaskIsRunning = case length(RunningTasks) of
+    TaskIsRunning = case lists:flatlength(RunningTasks) of
       0 -> false;
       _ ->
         lists:any(
@@ -264,14 +271,14 @@ start_all_tasks_periodically(RunningTasks, FinishedTasks) ->
   TasksList = node_generic_tasks_server:get_all_tasks(),
   io:format("=== Tasks list ~p ===~n", [TasksList]),
   FilteredTaskList = filter_task_list(TasksList, RunningTasks),
-  case length(FilteredTaskList) of
+  case lists:flatlength(FilteredTaskList) of
     0 ->
       {ko, no_tasks_to_run};
     _ ->
       NewFinishedTasksList = FinishedTasks -- FilteredTaskList,
       StartedTasks = lists:mapfoldl(
         fun(Task, StartedTasks) ->
-          CanRunTask = can_run_task(length(RunningTasks)),
+          CanRunTask = can_run_task(lists:flatlength(RunningTasks)),
           case CanRunTask of
       			true ->
               TaskFun = element(3, Task),

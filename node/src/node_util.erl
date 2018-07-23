@@ -91,17 +91,17 @@ utilization_sample(S1,S2) ->
   lists:foreach(fun(Scheduler) ->
                   case Scheduler of
                     {total, F, P} when is_float(F) ->
-                      io:format("=== Total usage = ~p ===~n", [P]);
+                      lager:info("=== Total usage = ~p ===~n", [P]);
                     {weighted, F, P} when is_float(F) ->
-                      io:format("=== Weighted usage = ~p ===~n", [P]);
+                      lager:info("=== Weighted usage = ~p ===~n", [P]);
                     {normal, Id, F, P} when is_float(F) ->
-                      io:format("=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
+                      lager:info("=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
                     {cpu, Id, F, P} when is_float(F) ->
-                      io:format("=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
+                      lager:info("=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
                     {io, Id, F, P} when is_float(F) ->
-                      io:format("=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
+                      lager:info("=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
                     _ ->
-                      io:format("=== Scheduler = ~p ===~n", [Scheduler])
+                      lager:info("=== Scheduler = ~p ===~n", [Scheduler])
                   end
                 end, LS),
     LS.

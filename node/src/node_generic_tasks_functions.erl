@@ -22,7 +22,8 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
 
   SensorFun = fun() ->
     io:format("=== Counter is at ~p ===~n", [Counter]),
-    io:format("=== Temp list : ~p ===~n",[Temps]),
+    % io:format("=== Temp list : ~p ===~n",[Temps]),
+    lager:info("=== Temp list : ~p ===~n",[Temps]),
     case Counter of
       5 ->
         io:format("=== Timer has ended, aggregating data and updating CRDT... === ~n"),
@@ -30,9 +31,11 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
         io:format("=== Average temp in past hour is ~p ===~n", [AverageTemp]),
         {ok, TempsCRDT} = lasp:query({<<"temp">>, state_orset}),
         TempsList = sets:to_list(TempsCRDT),
-        io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
+        % io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
+        lager:info("=== Temps CRDT : ~p ===~n", [TempsList]),
         OldCrdtData = [{Node, OldAvg, HourCounter, HourAvg, HourData} || {Node, OldAvg, HourCounter, HourAvg, HourData} <- TempsList, Node =:= node()],
-        io:format("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
+        % io:format("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
+        lager:info("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
         case length(OldCrdtData) of
           0 ->
             lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp, 1, [AverageTemp], [AverageTemp]}}, self());
