@@ -7,15 +7,15 @@
         kernel,
         stdlib,
         grisp,
-        sasl,
+        sasl
         % os_mon
         % grisp,
         % os_mon,
         % sasl,
-        elixir,
-        gen_stage,
-        flow,
-        numerix
+        % elixir,
+        % gen_stage,
+        % flow,
+        % numerix
         % webserver,
         % faker
     ]},

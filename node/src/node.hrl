@@ -140,6 +140,13 @@
 	  shutdown => brutal_kill,
 	  modules => [node_utils_server]}).
 
+-define(NODE_STORAGE_SPEC,
+	#{id => node_storage_server,
+	  start => {node_storage_server, start_link, []},
+	  restart => permanent, type => worker,
+	  shutdown => brutal_kill,
+	  modules => [node_storage_server]}).
+
 -define(WORKER_SPECS_MAP,
   #{generic_worker => ?GENERIC_SERVER_SPEC,
     generic_tasks_server => ?GENERIC_TASKS_SERVER_SPEC,
@@ -150,4 +157,5 @@
     node_stream_worker => ?NODE_STREAM_WORKER_SPEC(board),
     node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
     sensor_client_worker => ?SENSOR_CLIENT_SPEC,
-    node_utils_server => ?NODE_UTILS_SPEC}).
+    node_utils_server => ?NODE_UTILS_SPEC,
+    node_storage_server => ?NODE_STORAGE_SPEC}).

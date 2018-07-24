@@ -48,8 +48,8 @@ start(_StartType, _StartArgs) ->
     add_measurements(),
 
     % Adding a new task in Lasp :
-    Interval = node_config:get(temp_stream_interval, ?HMIN),
-    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
+    % Interval = node_config:get(temp_stream_interval, ?HMIN),
+    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
     node_generic_tasks_worker:start_task(task1),
 
     LEDs = [1, 2],
