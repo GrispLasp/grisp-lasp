@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include_lib("node.hrl").
+
 %% API
 -export([start_link/0, terminate/0]).
 -export([get_memory_usage/0]).
@@ -26,7 +28,8 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 
 init([]) ->
     io:format("Starting node storage server ~n"),
-    erlang:send_after(30000, self(), {monitor_memory_usage}),
+    Interval = node_config:get(memcheck_interval, ?HMIN),
+    erlang:send_after(Interval, self(), {monitor_memory_usage}),
 		% {ok, State, 5000}.
 		{ok, {}}.
 
@@ -35,23 +38,26 @@ handle_call(stop, _From, State) ->
 
 handle_info({monitor_memory_usage}, State) ->
 		MemUsageValue = get_mem_usage(),
-		if MemUsageValue =< 40 ->
+		% if MemUsageValue =< 40 ->
+		if MemUsageValue > 32 ->
 			io:format("=== Memory usage is high, persisting global CRDT states === ~n"),
 			persist_crdts();
 		true -> io:format("=== Usage ~p mb === ~n", [MemUsageValue])
 		end,
-    {noreply, State, 30000};
+    Interval = node_config:get(memcheck_interval, ?HMIN),
+    {noreply, State, Interval};
 
 handle_info(timeout, State) ->
 	MemUsageValue = get_mem_usage(),
-	if MemUsageValue =< 40 ->
+	% if MemUsageValue =< 40 ->
+	if MemUsageValue > 32 ->
 		io:format("=== Memory usage is high, persisting global CRDT states === ~n"),
 		persist_crdts();
 	true -> io:format("=== Usage ~p mb === ~n", [MemUsageValue])
 	end,
 	io:format("=== Usage ~p mb === ~n", [MemUsageValue]),
-	{noreply, State, 30000}.
-
+  Interval = node_config:get(memcheck_interval, ?HMIN),
+	{noreply, State, Interval}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 

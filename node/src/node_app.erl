@@ -46,10 +46,11 @@ start(_StartType, _StartArgs) ->
     start_primary_workers(primary_workers),
     start_primary_workers(distributed_workers),
     add_measurements(),
-
+    % lasp:query({<<"temp">>, state_orset}).
+    % lasp:query({<<"states">>, state_orset}).
     % Adding a new task in Lasp :
-    % Interval = node_config:get(temp_stream_interval, ?HMIN),
-    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
+    Interval = node_config:get(temp_stream_interval, ?HMIN),
+    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
     node_generic_tasks_worker:start_task(task1),
 
     LEDs = [1, 2],
@@ -110,10 +111,10 @@ start_timed_apps() ->
 myfit() ->
   {Intercept, Slope} = 'Elixir.Numerix.LinearRegression':fit([1.3, 2.1, 3.7, 4.2], [2.2, 5.8, 10.2, 11.8]),
   {Intercept, Slope}.
-
 % Adding a new task in Lasp :
 % node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
 % node_generic_tasks_worker:start_task(task1),
+% ets:new(Identifier, [ordered_set,named_table,public]).
 
 % Generate mock temperature measurements
 % node_sensor_server_worker:creates(temp),
