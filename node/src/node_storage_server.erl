@@ -27,7 +27,7 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 %% ===================================================================
 
 init([]) ->
-    io:format("Starting node storage server ~n"),
+    logger:log(info, "Starting node storage server ~n"),
     Interval = node_config:get(memcheck_interval, ?HMIN),
     erlang:send_after(Interval, self(), {monitor_memory_usage}),
 		% {ok, State, 5000}.
@@ -40,9 +40,9 @@ handle_info({monitor_memory_usage}, State) ->
 		MemUsageValue = get_mem_usage(),
 		% if MemUsageValue =< 40 ->
 		if MemUsageValue > 32 ->
-			io:format("=== Memory usage is high, persisting global CRDT states === ~n"),
+			logger:log(info, "=== Memory usage is high, persisting global CRDT states === ~n"),
 			persist_crdts();
-		true -> io:format("=== Usage ~p mb === ~n", [MemUsageValue])
+		true -> logger:log(info, "=== Usage ~p mb === ~n", [MemUsageValue])
 		end,
     Interval = node_config:get(memcheck_interval, ?HMIN),
     {noreply, State, Interval};
@@ -51,18 +51,18 @@ handle_info(timeout, State) ->
 	MemUsageValue = get_mem_usage(),
 	% if MemUsageValue =< 40 ->
 	if MemUsageValue > 32 ->
-		io:format("=== Memory usage is high, persisting global CRDT states === ~n"),
+		logger:log(info, "=== Memory usage is high, persisting global CRDT states === ~n"),
 		persist_crdts();
-	true -> io:format("=== Usage ~p mb === ~n", [MemUsageValue])
+	true -> logger:log(info, "=== Usage ~p mb === ~n", [MemUsageValue])
 	end,
-	io:format("=== Usage ~p mb === ~n", [MemUsageValue]),
+	logger:log(info, "=== Usage ~p mb === ~n", [MemUsageValue]),
   Interval = node_config:get(memcheck_interval, ?HMIN),
 	{noreply, State, Interval}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 terminate(Reason, _S) ->
-    io:format("=== Terminating node storage server (reason: ~p) ===~n",[Reason]),
+    logger:log(info, "=== Terminating node storage server (reason: ~p) ===~n",[Reason]),
     ok.
 
 code_change(_OldVsn, S, _Extra) -> {ok, S}.
@@ -82,11 +82,11 @@ persist_crdt(CrdtName) ->
 	{ok, F} = file:open(FileName, [append]),
 	lists:foreach( fun(X) -> io:format(F, "~p~n",[X]) end, CrdtDataList),
 	file:close(F),
-	io:format("=== Persisted ~p to SD card ===~n", [CrdtNameBitString]).
+	logger:log(info, "=== Persisted ~p to SD card ===~n", [CrdtNameBitString]).
 
 persist_crdts() ->
 	CrdtsNames = node_config:get(data_crdts_names, []),
-	io:format("=== Persisting all CRDTs to SD card ===~n"),
+	logger:log(info, "=== Persisting all CRDTs to SD card ===~n"),
 	lists:foreach(fun({CrdtName, FlushCrdt}) ->
 		CrdtNameStr = atom_to_list(CrdtName),
 		filelib:ensure_dir("data/"),
@@ -97,7 +97,7 @@ persist_crdts() ->
 		Uptime = element(1, erlang:statistics(wall_clock))/60000,
 		if Uptime >= 1440 -> % Force flush of all CRDTs every 24 hours
 			% TODO: detect that a force flush has been performed to not loop inside this block
-			io:format("=== Force flush of all CRDTs as uptime is more than 24 hours===~n"),
+			logger:log(info, "=== Force flush of all CRDTs as uptime is more than 24 hours===~n"),
 			lasp:update({CrdtNameBitString, state_orset}, {rmv_all, CrdtDataList}, self());
 		true ->
 			if FlushCrdt == flush_crdt -> % If flush_crdt instruction is set for this CRDT, flush its CRDT when persisting
@@ -109,7 +109,7 @@ persist_crdts() ->
 		{ok, F} = file:open(FileName, [append]),
     lists:foreach( fun(X) -> io:format(F, "~p~n",[X]) end, CrdtDataList),
 		file:close(F),
-		io:format("=== Persisted ~p to SD card ===~n", [CrdtNameBitString])
+		logger:log(info, "=== Persisted ~p to SD card ===~n", [CrdtNameBitString])
 	end, CrdtsNames).
 
 

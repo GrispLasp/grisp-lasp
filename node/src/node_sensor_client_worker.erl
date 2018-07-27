@@ -27,11 +27,11 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 %% ===================================================================
 
 init([]) ->
-    io:format("Starting a client for the sensor ~n"),
-    % io:format("Adding node: ~p to the set clients ~n",[node()]),
+    logger:log(info, "Starting a client for the sensor ~n"),
+    % logger:log(info, "Adding node: ~p to the set clients ~n",[node()]),
     % Time = os:timestamp(),
     % lasp:update({<<"clients">>,state_orset},{add,{node(),Time}},self()),
-    io:format("Creating a temperature sensor~n"),
+    logger:log(info, "Creating a temperature sensor~n"),
     node_sensor_server_worker:creates(temp),
     {ok, #state{counter = 0, temps = []}, 30000}.
 
@@ -40,26 +40,26 @@ handle_call(stop, _From, State) ->
 
 handle_info(timeout,
 	    S = #state{counter = Counter, temps = Temps}) ->
-    io:format("=== Counter is at ~p ===~n", [Counter]),
-    io:format("=== Temp list : ~p ===~n", [Temps]),
+    logger:log(info, "=== Counter is at ~p ===~n", [Counter]),
+    logger:log(info, "=== Temp list : ~p ===~n", [Temps]),
     {NewCounter, NewTempList} = case Counter of
 				  20 ->
-				      io:format("=== Timer has ended, aggregating data "
+				      logger:log(info, "=== Timer has ended, aggregating data "
 						"and updating CRDT... === ~n"),
 				      AverageTemp = average(Temps),
-				      io:format("=== Average temp in past hour is ~p "
+				      logger:log(info, "=== Average temp in past hour is ~p "
 						"===~n",
 						[AverageTemp]),
 				      {ok, TempsCRDT} = lasp:query({<<"temp">>,
 								    state_orset}),
 				      TempsList = sets:to_list(TempsCRDT),
-				      % io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
+				      % logger:log(info, "=== Temps CRDT : ~p ===~n", [TempsList]),
 				      OldCrdtData = [{Node, OldAvg, HourCounter}
 						     || {Node, OldAvg,
 							 HourCounter}
 							    <- TempsList,
 							Node =:= node()],
-				      io:format("=== Old CRDT data is ~p ===~n",
+				      logger:log(info, "=== Old CRDT data is ~p ===~n",
 						[OldCrdtData]),
 				      case length(OldCrdtData) of
 					0 ->
@@ -81,7 +81,7 @@ handle_info(timeout,
 								 (1 /
 								    (HourCounter
 								       + 1)),
-					    io:format("=== New average temp : ~p ===~n",
+					    logger:log(info, "=== New average temp : ~p ===~n",
 						      [NewAverageTemp]),
 					    lasp:update({<<"temp">>,
 							 state_orset},
@@ -112,13 +112,13 @@ handle_info(timeout,
      S#state{counter = NewCounter, temps = NewTempList},
      30000};
 handle_info(Msg, State) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, State}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 terminate(Reason, _S) ->
-    io:format("=== Terminating Sensor client Gen Server "
+    logger:log(info, "=== Terminating Sensor client Gen Server "
 	      "(reason: ~p) ===~n",
 	      [Reason]),
     ok.

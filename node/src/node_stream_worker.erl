@@ -70,11 +70,11 @@ init({Mode}) ->
     State = #state{luminosity = [], lasp_id = Id},
     case Mode of
       emu ->
-	  io:format("Starting Emulated stream worker ~n"),
+	  logger:log(info, "Starting Emulated stream worker ~n"),
 	  % flood(),
 	  {ok, State};
       board ->
-	  io:format("Starting stream worker on GRiSP ~n"),
+	  logger:log(info, "Starting stream worker on GRiSP ~n"),
 	  {ok, State, 10000};
       % {ok, NewMap, 10000};
       _ -> {stop, unknown_launch_mode}
@@ -161,7 +161,7 @@ store_data(Rate, Type, SensorData, Node, Self,
     ok.
 
 store_state(Rate, Id, State, Node, Self) ->
-    % io:format("State ~p ~n", [State]),
+    % logger:log(info, "State ~p ~n", [State]),
     % BitString = atom_to_binary(Type, latin1),
     {ok, Set} = lasp:query(Id),
     L = sets:to_list(Set),
@@ -213,15 +213,15 @@ maybe_get_time({ok, WS}) ->
 	maybe_get_time(Res);
 
 maybe_get_time(undefined) ->
-	io:format("No webserver host found in environment, local time will be used ~n"),
+	logger:log(info, "No webserver host found in environment, local time will be used ~n"),
 	maybe_get_time(local);
 
 maybe_get_time({{Y,Mo,D},{H,Mi,S}}) ->
 	{{Y,Mo,D},{H,Mi,S}};
 
 maybe_get_time({badrpc, Reason}) ->
-	io:format("Failed to get local time from webserver ~n"),
-	io:format("Reason : ~p ~n", [Reason]),
+	logger:log(info, "Failed to get local time from webserver ~n"),
+	logger:log(info, "Reason : ~p ~n", [Reason]),
 	maybe_get_time(local);
 
 maybe_get_time(local) ->

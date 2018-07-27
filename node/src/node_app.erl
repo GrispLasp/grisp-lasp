@@ -32,39 +32,37 @@
 % https://github.com/lasp-lang/lasp/pull/295/commits/e2f948f879145a5ff31cf5458201768ca97b406b
 
 start(_StartType, _StartArgs) ->
-    io:format("Application Master starting Node app ~n"),
+    logger:log(notice, "Application Master starting Node app ~n"),
     {ok, Supervisor} = node:start(node),
     % application:ensure_all_started(os_mon),
     node_util:set_platform(),
 
     % {ok, F} = file:open("z", [write]),
     % group_leader(F, self()),
-    % io:format("Where am I going to appear?~n"),
+    % logger:log(notice"Where am I going to appear?~n"),
     start_timed_apps(),
 
-    io:format("Application Master started Node app ~n"),
+    logger:log(notice, "Application Master started Node app ~n"),
     start_primary_workers(primary_workers),
     start_primary_workers(distributed_workers),
     add_measurements(),
     % lasp:query({<<"temp">>, state_orset}).
     % lasp:query({<<"states">>, state_orset}).
     % Adding a new task in Lasp :
-    Interval = node_config:get(temp_stream_interval, ?HMIN),
-    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
-    node_generic_tasks_worker:start_task(task1),
+    add_task1(),
 
     LEDs = [1, 2],
     [grisp_led:flash(L, aqua, 500) || L <- LEDs],
 
     PeerConfig = lasp_partisan_peer_service:manager(),
-    io:format("The manager used is ~p ~n", [PeerConfig]),
+    logger:log(notice, "The manager used is ~p ~n", [PeerConfig]),
 
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
 
 stop(_State) ->
-    io:format("Application Master has stopped app~n"), ok.
+    logger:log(notice, "Application Master has stopped app~n"), ok.
 
 %%====================================================================
 %% Internal functions
@@ -100,13 +98,18 @@ start_timed_apps() ->
                 end, [], Apps),
               T2 = erlang:monotonic_time(second),
               Time = T2 - T1,
-              io:format("Time to start ~p"
+              logger:log(notice, "Time to start ~p"
               "is approximately ~p seconds ~n",
               [Started, Time]).
 
 %%====================================================================
 %% Useful snippets
 %%====================================================================
+
+add_task1() ->
+    Interval = node_config:get(temp_stream_interval, ?HMIN),
+    node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
+    node_generic_tasks_worker:start_task(task1).
 
 myfit() ->
   {Intercept, Slope} = 'Elixir.Numerix.LinearRegression':fit([1.3, 2.1, 3.7, 4.2], [2.2, 5.8, 10.2, 11.8]),

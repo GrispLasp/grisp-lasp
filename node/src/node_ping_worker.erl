@@ -35,7 +35,7 @@ terminate() ->
 %% ===================================================================
 
 init({}) ->
-    io:format("Initializing Node Pinger~n"),
+    logger:log(info, "Initializing Node Pinger~n"),
     process_flag(trap_exit,
 		 true), %% Ensure Gen Server gets notified when his supervisor dies
     erlang:send_after(5000, self(),
@@ -45,14 +45,14 @@ init({}) ->
 
 handle_call({ping, Number, Timer}, _From,
 	    CurrentList) ->
-    io:format("=== Current list of Node pinged correctly "
+    logger:log(info, "=== Current list of Node pinged correctly "
 	      "(~p) ===~n",
 	      [CurrentList]),
     PingedNodes = ping(CurrentList, Number, partial),
     self() ! {timer, Timer},
     {reply, {ok, PingedNodes}, PingedNodes};
 handle_call({terminate}, _From, CurrentList) ->
-    io:format("=== Ping server terminates with Current "
+    logger:log(info, "=== Ping server terminates with Current "
 	      "list of Node pinged correctly (~p) ===~n",
 	      [CurrentList]),
     {reply, {terminate}, CurrentList};
@@ -60,30 +60,30 @@ handle_call(_Message, _From, CurrentList) ->
     {reply, {ok, CurrentList}, CurrentList}.
 
 handle_info({full_ping}, CurrentList) ->
-    io:format("=== Starting a full ping ===~n"),
+    logger:log(info, "=== Starting a full ping ===~n"),
     T1 = os:timestamp(),
     PingedNodes = ping(CurrentList, 1, full),
     T2 = os:timestamp(),
     Time = timer:now_diff(T2, T1),
-    io:format("=== Time to do a full ping ~ps ===~n",
+    logger:log(info, "=== Time to do a full ping ~ps ===~n",
 	      [Time / 1000000]),
-    io:format("=== Nodes that answered back ~p ===~n",
+    logger:log(info, "=== Nodes that answered back ~p ===~n",
 	      [PingedNodes]),
     {noreply, PingedNodes, 180000};
 handle_info(timeout, CurrentList) ->
-    io:format("=== Timeout of full ping, restarting "
+    logger:log(info, "=== Timeout of full ping, restarting "
 	      "after 180s ===~n"),
     T1 = os:timestamp(),
     PingedNodes = ping(CurrentList, 1, full),
     T2 = os:timestamp(),
     Time = timer:now_diff(T2, T1),
-    io:format("=== Time to do a full ping ~ps ===~n",
+    logger:log(info, "=== Time to do a full ping ~ps ===~n",
 	      [Time / 1000000]),
-    io:format("=== Nodes that answered back ~p ===~n",
+    logger:log(info, "=== Nodes that answered back ~p ===~n",
 	      [PingedNodes]),
     {noreply, PingedNodes, 180000};
 handle_info(Msg, CurrentList) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, CurrentList}.
 
 handle_cast(_Message, CurrentList) ->

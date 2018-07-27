@@ -13,22 +13,22 @@
 start() -> node_supersup:start_link().
 
 start(all) ->
-    io:format("Starting Partisan, Lasp and Node~n"),
+    logger:log(info, "Starting Partisan, Lasp and Node~n"),
     node_supersup:start_link(all);
 start(node) ->
-    io:format("Starting Node~n"),
+    logger:log(info, "Starting Node~n"),
     node_supersup:start_link(node).
 
 start_node() ->
-    io:format("Starting Node Supervisor~n"),
+    logger:log(info, "Starting Node Supervisor~n"),
     node_supersup:start_node().
 
 start_partisan() ->
-    io:format("Starting Partisan~n"),
+    logger:log(info, "Starting Partisan~n"),
     node_supersup:start_partisan().
 
 start_lasp() ->
-    io:format("Starting Lasp~n"),
+    logger:log(info, "Starting Lasp~n"),
     node_supersup:start_lasp().
 
 stop_child(Name) -> node_supersup:stop_child(Name).

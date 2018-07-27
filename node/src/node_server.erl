@@ -40,7 +40,7 @@ terminate_worker(Pid) ->
 %% ===================================================================
 
 init(NodeSup) ->
-    io:format("Initializing Node Server~n"),
+    logger:log(info, "Initializing Node Server~n"),
     process_flag(trap_exit,
 		 true), %% Ensure Gen Server gets notified when his supervisor dies
     case NodeSup of
@@ -53,14 +53,14 @@ init(NodeSup) ->
 
 handle_call({start_worker, WorkerType}, _From,
 	    S = #server_state{worker_sup = WorkerSup, workers = W}) ->
-    io:format("=== Starting new worker (~p) ===~n",
+    logger:log(info, "=== Starting new worker (~p) ===~n",
 	      [WorkerType]),
     case maps:get(WorkerType, ?WORKER_SPECS_MAP) of
       {badkey, _} ->
-	  io:format("=== Worker Type not found in map ===~n"),
+	  logger:log(info, "=== Worker Type not found in map ===~n"),
 	  {reply, {badkey, worker_type_not_exist}, S};
       ChildSpec ->
-	  io:format("=== Found Worker Spec ~p === ~n",
+	  logger:log(info, "=== Found Worker Spec ~p === ~n",
 		    [ChildSpec]),
 	  {ok, Pid} = supervisor:start_child(WorkerSup,
 					     ChildSpec),
@@ -70,11 +70,11 @@ handle_call({start_worker, WorkerType}, _From,
     end;
 handle_call({terminate_worker, WorkerPid}, _From,
 	    S = #server_state{worker_sup = WorkerSup}) ->
-    io:format("=== Terminate worker (~p) ===~n",
+    logger:log(info, "=== Terminate worker (~p) ===~n",
 	      [WorkerPid]),
     case supervisor:terminate_child(WorkerSup, WorkerPid) of
       {error, not_found} ->
-	  io:format("=== Worker with PID ~p was not found "
+	  logger:log(info, "=== Worker with PID ~p was not found "
 		    "in the worker supervisor (pid: ~p) ===",
 		    [WorkerPid, WorkerSup]),
 	  {reply, {error, pid_not_found, WorkerPid}, S};
@@ -87,17 +87,17 @@ handle_cast(_Msg, S) -> {noreply, S}.
 
 handle_info({start_worker_supervisor, NodeSup},
 	    S = #server_state{}) ->
-    io:format("=== Start Node Worker Supervisor ===~n"),
+    logger:log(info, "=== Start Node Worker Supervisor ===~n"),
     {ok, WorkerSupPid} = supervisor:start_child(NodeSup,
 						?NODE_WORKER_SUP_SPEC),
     link(WorkerSupPid),
-    io:format("=== PID of Node Worker Supervisor ~p "
+    logger:log(info, "=== PID of Node Worker Supervisor ~p "
 	      "===~n",
 	      [WorkerSupPid]),
     {noreply, S#server_state{worker_sup = WorkerSupPid}};
 handle_info({'DOWN', Ref, process, Pid, Info},
 	    S = #server_state{workers = Refs}) ->
-    io:format("=== Worker ~p is dead (because of ~p), "
+    logger:log(info, "=== Worker ~p is dead (because of ~p), "
 	      "removing him from workers set ===~n",
 	      [Pid, Info]),
     case gb_sets:is_element(Ref, Refs) of
@@ -107,23 +107,23 @@ handle_info({'DOWN', Ref, process, Pid, Info},
       false -> {noreply, S}
     end;
 handle_info({'EXIT', _From, Reason}, S) ->
-    io:format("=== Supervisor sent an exit signal (reason: "
+    logger:log(info, "=== Supervisor sent an exit signal (reason: "
 	      "~p), terminating Gen Server ===~n",
 	      [Reason]),
     {stop, Reason, S};
 handle_info(Msg, S) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, S}.
 
 terminate(normal, _S) ->
-    io:format("=== Normal Gen Server termination ===~n"),
+    logger:log(info, "=== Normal Gen Server termination ===~n"),
     ok;
 terminate(shutdown, _S) ->
-    io:format("=== Supervisor asked to terminate Gen "
+    logger:log(info, "=== Supervisor asked to terminate Gen "
 	      "Server (reason: shutdown) ===~n"),
     ok;
 terminate(Reason, _S) ->
-    io:format("=== Terminating Gen Server (reason: "
+    logger:log(info, "=== Terminating Gen Server (reason: "
 	      "~p) ===~n",
 	      [Reason]),
     ok.

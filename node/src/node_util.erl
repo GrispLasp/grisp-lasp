@@ -24,7 +24,7 @@ set_platform() ->
 process(N) ->
     ?PAUSEHMIN,
     Epoch = (?HMIN) * N,
-    io:format("Data after = ~p seconds ~n", [?TOS(Epoch)]),
+    logger:log(info, "Data after = ~p seconds ~n", [?TOS(Epoch)]),
     {ok, Lum} = lasp:query({<<"als">>, state_orset}),
     ?PAUSE3,
     LumList = sets:to_list(Lum),
@@ -34,31 +34,31 @@ process(N) ->
     ?PAUSE3,
     {ok, Gyr} = lasp:query({<<"gyro">>, state_orset}),
     Gyro = sets:to_list(Gyr),
-    io:format("Raw ALS Data ~n"),
+    logger:log(info, "Raw ALS Data ~n"),
     printer(LumList, luminosity),
-    io:format("Raw Sonar Data ~n"),
+    logger:log(info, "Raw Sonar Data ~n"),
     printer(Sonar, sonar),
-    io:format("Raw Gyro Data ~n"),
+    logger:log(info, "Raw Gyro Data ~n"),
     printer(Gyro, gyro),
     process(N + 1).
 
 %%--------------------------------------------------------------------
 
 printer([], Arg) ->
-    io:format("nothing left to print for ~p ~n", [Arg]);
+    logger:log(info, "nothing left to print for ~p ~n", [Arg]);
 printer([H], Arg) ->
-    io:format("Elem = ~p ~n", [H]),
-    io:format("done printing ~p ~n", [Arg]);
+    logger:log(info, "Elem = ~p ~n", [H]),
+    logger:log(info, "done printing ~p ~n", [Arg]);
 printer([H | T], Arg) ->
     ?PAUSEMS,
-    io:format("Elem = ~p ~n", [H]),
+    logger:log(info, "Elem = ~p ~n", [H]),
     printer(T, Arg).
 
 atom_to_lasp_identifier(Name, Type) ->
     {atom_to_binary(Name, latin1), Type}.
 
 declare_crdts(Vars) ->
-    io:format("Declaring Lasp variables ~n"),
+    logger:log(info, "Declaring Lasp variables ~n"),
     lists:foldl(fun(Name, Acc) ->
                     [lasp:declare(node_util:atom_to_lasp_identifier(Name,state_orset), state_orset) | Acc]
                   end, [], Vars).
@@ -91,17 +91,17 @@ utilization_sample(S1,S2) ->
   lists:foreach(fun(Scheduler) ->
                   case Scheduler of
                     {total, F, P} when is_float(F) ->
-                      lager:info("=== Total usage = ~p ===~n", [P]);
+                      logger:log(info, "=== Total usage = ~p ===~n", [P]);
                     {weighted, F, P} when is_float(F) ->
-                      lager:info("=== Weighted usage = ~p ===~n", [P]);
+                      logger:log(info, "=== Weighted usage = ~p ===~n", [P]);
                     {normal, Id, F, P} when is_float(F) ->
-                      lager:info("=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
+                      logger:log(info, "=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
                     {cpu, Id, F, P} when is_float(F) ->
-                      lager:info("=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
+                      logger:log(info, "=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
                     {io, Id, F, P} when is_float(F) ->
-                      lager:info("=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
+                      logger:log(info, "=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
                     _ ->
-                      lager:info("=== Scheduler = ~p ===~n", [Scheduler])
+                      logger:log(info, "=== Scheduler = ~p ===~n", [Scheduler])
                   end
                 end, LS),
     LS.
