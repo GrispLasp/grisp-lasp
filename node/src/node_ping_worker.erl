@@ -108,9 +108,13 @@ code_change(_OldVersion, CurrentList, _Extra) ->
 ping(PingList, N, Type) when N > 0 ->
     % List = [node@my_grisp_board_1,node@my_grisp_board_2,node@my_grisp_board_3,node@my_grisp_board_4,node@my_grisp_board_5,node@my_grisp_board_6,node@my_grisp_board_7,node@my_grisp_board_8,node@my_grisp_board_9,node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
     % List = [node@my_grisp_board_10,node@my_grisp_board_11,node@my_grisp_board_12],
-    List = [node@my_grisp_board_1,node@my_grisp_board_2,node@my_grisp_board_3],
     % List = ?BOARDS(?IGOR),
+	Remotes = maps:fold(fun
+		(K, V, AccIn) when is_list(V) ->
+			AccIn ++ V
+	end, [], node_config:get(remote_hosts, #{})),
     % List = (?BOARDS((?IGOR))) ++ ['nodews@Laymer-3'],
+    List = (?BOARDS((?IGOR))) ++ Remotes,
     % List = [generic_node_1@GrispAdhoc,generic_node_2@GrispAdhoc],
     ListWithoutSelf = lists:delete(node(), List),
     Ping = fun (X) -> net_adm:ping(X) == pong end,

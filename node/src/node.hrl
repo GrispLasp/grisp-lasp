@@ -66,7 +66,8 @@
 -define(DAN,      lists:seq(7,9,1) ).
 -define(IGOR,   lists:seq(10,12,1) ).
 
--define(BOARDS(Name),   [ list_to_atom(lists:flatten(lists:concat([node@my_grisp_board, "_", X]))) || X <- Name ] ).
+% -define(BOARDS(Name),   [ list_to_atom(lists:flatten(unicode:characters_to_list(["node@my_grisp_board", "_", integer_to_list(X)], utf8))) || X <- Name ] ).
+-define(BOARDS(Name),   [ list_to_atom(unicode:characters_to_list(["node@my_grisp_board", "_", integer_to_list(X)], utf8)) || X <- Name ] ).
 
 %%====================================================================
 %% Child Specifications

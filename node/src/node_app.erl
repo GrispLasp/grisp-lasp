@@ -98,7 +98,7 @@ start_timed_apps() ->
                 end, [], Apps),
               T2 = erlang:monotonic_time(second),
               Time = T2 - T1,
-              logger:log(notice, "Time to start ~p"
+              logger:log(notice, "Time to start ~p ~n"
               "is approximately ~p seconds ~n",
               [Started, Time]).
 

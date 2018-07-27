@@ -62,6 +62,12 @@ declare_crdts(Vars) ->
     lists:foldl(fun(Name, Acc) ->
                     [lasp:declare(node_util:atom_to_lasp_identifier(Name,state_orset), state_orset) | Acc]
                   end, [], Vars).
+
+lasp_id_to_atom({BitString, _Type}) ->
+    binary_to_atom(BitString, utf8).
+
+atom_to_lasp_id(Id) ->
+    {atom_to_binary(Id,utf8), state_orset}.
 % https://potatosalad.io/2017/08/05/latency-of-native-functions-for-erlang-and-elixir
 % http://erlang.org/pipermail/erlang-questions/2014-July/080037.html
 
