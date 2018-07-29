@@ -6,6 +6,20 @@
 -include_lib("kernel/include/file.hrl").
 
 %%====================================================================
+%% Defaults
+%%====================================================================
+
+-define(PMOD_ALS_RANGE, lists:seq(1, 255, 1)).
+-define(ALS_DEFAULT_RATE,   ?HMIN).
+-define(ALS_DEFAULT_PROPAGATION_TRESHOLD,   20).
+-define(ALS_RAW,    case application:get_env(node, emulate_als, false) of
+    true ->
+        rand:uniform(length(?PMOD_ALS_RANGE));
+    _ ->
+        pmod_als:raw()
+end).
+
+%%====================================================================
 %% Time Intervals (ms)
 %%====================================================================
 
@@ -21,8 +35,9 @@
 %% Timers
 %%====================================================================
 
--define(TIME_MULTIPLIER,      lists:last(tuple_to_list(application:get_env(node, time_multiplier, {ok, 1})))).
--define(SLEEP(Interval),                                     timer:sleep((round(Interval/?TIME_MULTIPLIER)))).
+% -define(TIME_MULTIPLIER,      lists:last(tuple_to_list(application:get_env(node, time_multiplier, 1)))).
+-define(TIME_MULTIPLIER,          application:get_env(node, time_multiplier, 1)).
+-define(SLEEP(Interval),        timer:sleep((round(Interval/?TIME_MULTIPLIER)))).
 
 -define(PAUSEMS,                     ?SLEEP(?MS)).
 -define(PAUSE1,                     ?SLEEP(?ONE)).

@@ -49,7 +49,7 @@ start(_StartType, _StartArgs) ->
     % lasp:query({<<"temp">>, state_orset}).
     % lasp:query({<<"states">>, state_orset}).
     % Adding a new task in Lasp :
-    add_task1(),
+    % add_task1(),
 
     LEDs = [1, 2],
     [grisp_led:flash(L, aqua, 500) || L <- LEDs],

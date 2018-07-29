@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include_lib("node.hrl").
+
 %% API
 -export([start_link/0, terminate/0]).
 -export([get_cpu_usage/0]).
@@ -33,11 +35,13 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 
 init([]) ->
     logger:log(info, "Starting a node utility server ~n"),
-		S1 = scheduler:sample_all(),
-		State = #samples_state{s1 = S1},
+	S1 = scheduler:sample_all(),
+	State = #samples_state{s1 = S1},
+	GCInterval = node_config:get(gc_interval, ?MIN),
     erlang:send_after(5000, self(), {get_cpu_usage}),
+    erlang:send_after(GCInterval, self(), {gc, GCInterval}),
 		% {ok, State, 5000}.
-		{ok, State}.
+	{ok, State}.
 
 handle_call({get_cpu_usage}, From, _State = #samples_state{s1 = S1, sysload = _Load}) ->
 	S2 = scheduler:sample_all(),
@@ -63,6 +67,11 @@ handle_info({get_cpu_usage}, _State = #samples_state{s1 = S1, sysload = _Load}) 
 		NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
 		erlang:send_after(5000, self(), {get_cpu_usage}),
     {noreply, NewState};
+
+handle_info({gc, GCInterval}, State) ->
+	node_storage_util:gc(),
+	erlang:send_after(GCInterval, self(), {gc, GCInterval}),
+	{noreply, State};
 
 handle_info(Msg, State) ->
     logger:log(info, "=== Unknown message: ~p~n", [Msg]),

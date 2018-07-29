@@ -399,6 +399,7 @@ mem() ->
 % node_storage_util:save_crdt({<<"temp">>, state_orset}, tempfile).
 % node_storage_util:load_crdt(tempfile).
 % lasp:query({<<"temp">>, state_orset}).
+% lasp:query({<<"states">>, state_orset}).
 
 % node_storage_util:run_lasp().
 % node_storage_util:get_test().

@@ -27,9 +27,6 @@
 %% Macros
 %%====================================================================
 
--define(PMOD_ALS_RANGE, lists:seq(1, 255, 1)).
-
--define(PMOD_ALS_REFRESH_RATE, ?TEN).
 
 %%====================================================================
 %% Records
@@ -38,7 +35,7 @@
 % NOTE : prepend atom to list to avoid ASCII representation of integer lists
 % -record(state,
 % 	{luminosity = [lum], sonar = [son], gyro = [gyr]}).
--record(state, {luminosity = [], lasp_id = {}}).
+-record(state, {luminosity = [], lasp_id = {}, interval = [], treshold = []}).
 % -record(state,
 				  % 	{luminosity = #{}, sonar = [], gyro = []}).
 
@@ -65,17 +62,22 @@ refresh_webserver() ->
 
 init({Mode}) ->
     _ = rand:seed(exsp),
-		% Id = node_util:atom_to_lasp_identifier(states, state_orset).
-		[{ok, {Id, _Type, _Metadata, _Value}}] = node_util:declare_crdts([states]),
-    State = #state{luminosity = [], lasp_id = Id},
+	% Id = node_util:atom_to_lasp_identifier(states, state_orset).
+	[{ok, {Id, _Type, _Metadata, _Value}}] = node_util:declare_crdts([states]),
+	% NOTE : declaring interval and treshold during initialization to
+	% avoid fetching application environment variables during every
+	% singe request handling.
+	Interval = node_config:get(als_stream_interval, ?ALS_DEFAULT_RATE),
+	Treshold = node_config:get(als_propagation_treshold, ?ALS_DEFAULT_PROPAGATION_TRESHOLD),
+    State = #state{luminosity = [], lasp_id = Id, interval = Interval, treshold = Treshold},
     case Mode of
       emu ->
-	  logger:log(info, "Starting Emulated stream worker ~n"),
-	  % flood(),
-	  {ok, State};
+		  logger:log(info, "Starting Emulated stream worker ~n"),
+		  % flood(),
+		  {ok, State};
       board ->
-	  logger:log(info, "Starting stream worker on GRiSP ~n"),
-	  {ok, State, 10000};
+		  logger:log(info, "Starting stream worker on GRiSP ~n"),
+		  {ok, State, ?TEN};
       % {ok, NewMap, 10000};
       _ -> {stop, unknown_launch_mode}
     end.
@@ -100,28 +102,50 @@ handle_cast(_Msg, State) -> {noreply, State}.
 %%--------------------------------------------------------------------
 
 handle_info(timeout,
-	    _State = #state{luminosity = Lum, lasp_id = Id}) ->
+	    _State = #state{luminosity = Lum, lasp_id = Id, interval = Interval, treshold = Treshold}) ->
 	{{Y, Mo, D}, {H, Mi, S}} = maybe_get_time(),
-    Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
+	Raw = {?ALS_RAW, {{Y, Mo, D}, {H, Mi, S}}},
+    % Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
     % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
-    NewState = #state{luminosity = NewLum, lasp_id = Id},
-		Interval = node_config:get(als_stream_interval, ?PMOD_ALS_REFRESH_RATE),
-		ok = store_state(Interval, Id,
-		     NewState, node(), self()),
+    NewState = #state{luminosity = NewLum, lasp_id = Id, interval = Interval, treshold = Treshold},
+		% Interval = node_config:get(als_stream_interval, ?PMOD_ALS_REFRESH_RATE),
+	erlang:send_after(Interval, self(), states),
     {noreply, NewState};
 handle_info(states,
-	    _State = #state{luminosity = Lum, lasp_id = Id}) ->
+	    _State = #state{luminosity = Lum, lasp_id = Id, interval = Interval, treshold = Treshold}) ->
 	{{Y, Mo, D}, {H, Mi, S}} = maybe_get_time(),
-    Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
+    Raw = {?ALS_RAW, {{Y, Mo, D}, {H, Mi, S}}},
     % Raw = pmod_als:raw(),
     NewLum = Lum ++ [Raw],
-    NewState = #state{luminosity = NewLum, lasp_id = Id},
-		Interval = node_config:get(als_stream_interval, ?PMOD_ALS_REFRESH_RATE),
-    ok = store_state(Interval, Id,
-		     NewState, node(), self()),
+	NewState = if
+		length(NewLum) >= Treshold ->
+			ok = store_state(Interval, Id, #state{luminosity = NewLum, lasp_id = Id}, node(), self()),
+			#state{luminosity = [], lasp_id = Id, interval = Interval, treshold = Treshold};
+		true ->
+			#state{luminosity = NewLum, lasp_id = Id, interval = Interval, treshold = Treshold}
+	end,
+	%
+    % ok = store_state(Interval, Id,
+	% 	     NewState, node(), self()),
+	erlang:send_after(Interval, self(), states),
     {noreply, NewState};
 handle_info(_Info, State) -> {noreply, State}.
+% handle_info(grow_states,
+% 	    _State = #state{luminosity = Lum, lasp_id = Id, interval = Interval, treshold = Treshold}) ->
+% 	{{Y, Mo, D}, {H, Mi, S}} = maybe_get_time(),
+%     Raw = {pmod_als:raw(), {{Y, Mo, D}, {H, Mi, S}}},
+%     % Raw = pmod_als:raw(),
+%     NewLum = Lum ++ [Raw],
+% 	NewState = #state{luminosity = NewLum, lasp_id = Id, interval = Interval, treshold = Treshold},
+% 	if
+% 		lists:flatlength(NewLum) >= 20 ->
+% 			ok = store_state(Interval, Id, NewState, node(), self()),
+% 			body
+% 	end
+%     ok = store_state(Interval, Id,
+% 		     NewState, node(), self()),
+%     {noreply, NewState};
 
 %%--------------------------------------------------------------------
 
@@ -157,10 +181,11 @@ store_data(Rate, Type, SensorData, Node, Self,
 	  ok;
       _ -> ok
     end,
-    erlang:send_after(Rate, Self, Type),
+    % erlang:send_after(Rate, Self, Type),
     ok.
 
-store_state(Rate, Id, State, Node, Self) ->
+% store_state(Rate, Id, State, Node, Self) ->
+store_state(_Rate, Id, State, Node, Self) ->
     % logger:log(info, "State ~p ~n", [State]),
     % BitString = atom_to_binary(Type, latin1),
     {ok, Set} = lasp:query(Id),
@@ -177,19 +202,20 @@ store_state(Rate, Id, State, Node, Self) ->
 				    L),
     case length(L) of
       0 ->
-	  lasp:update(Id,
-		      {add, {Node, State}}, Self),
-	  ok;
+		  lasp:update(Id,
+			      {add, {Node, State}}, Self),
+		  ok;
       1 when length(MapReduceList) > 0 ->
-	  Leaving = hd(L),
-	  H = hd(MapReduceList),
-	  lasp:update(Id, {rmv, Leaving},
-		      Self),
-	  lasp:update(Id, {add, H}, Self);
+		  Leaving = hd(L),
+		  H = hd(MapReduceList),
+		  lasp:update(Id, {rmv, Leaving},
+			      Self),
+		  lasp:update(Id, {add, H}, Self);
       _ -> ok
     end,
-    erlang:send_after(Rate, Self, states),
+    % erlang:send_after(Rate, Self, states),
     ok.
+
 
 %% @doc Returns actual time and date if available from the webserver, or the local node time and date.
 %%
