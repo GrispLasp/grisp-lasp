@@ -336,6 +336,20 @@ update(Op, Elems) ->
     lasp:update(get_id(), {Op, Elems}, self()).
 
 diagnose() ->
+
+    % NOTE :
+    % Erlang's binaries are of two main types: ProcBins and Refc binaries.
+    % Binaries up to 64 bytes are allocated directly on the process's heap,
+    % and take the place they use in there.
+    % Binaries bigger than that get allocated in a global heap for binaries only,
+    % and each process holds a local reference in its local heap.
+
+    % NOTE :
+    % Heap binaries are small binaries, up to 64 bytes,
+    % and are stored directly on the process heap. They are copied
+    % when the process is garbage-collected and when they are sent as a message.
+    % They do not require any special handling by the garbage collector.
+
     % garbage_collect(self(),[{type, 'major'}]),
     % instrument:allocations().
     % instrument:allocations(#{ histogram_start => 128, histogram_width => 15 }).
@@ -347,9 +361,35 @@ diagnose() ->
     % erlang:system_info(process_count).
     % erlang:system_info(process_limit).
     % erlang:system_info(heap_sizes).
-    instrument:carriers(#{ histogram_start => 512, histogram_width => 8, allocator_types => [eheap_alloc] }).
+    % [{{A, N}, Data} || A <- [temp_alloc, eheap_alloc, binary_alloc, ets_alloc,driver_alloc, sl_alloc, ll_alloc, fix_alloc, std_alloc],{instance, N, Data} <- erlang:system_info({allocator,eheap_alloc})].
+    % bin_leak(N::pos_integer()) -> [proc_attrs()].
+    % recon:bin_leak(20).
 
+    % recon_alloc:memory(allocated).
+    % recon_alloc:memory(used).
+    % recon_alloc:memory(usage).
+    % garbage_collect(self(),[{type, 'major'}]).
+    % recon_alloc:memory(usage).
+    % instrument:carriers(#{ histogram_start => 512, histogram_width => 8, allocator_types => [eheap_alloc] }).
+    ok.
 
+gc() ->
+    % TODO : compare fragmentation before and after
+    ok = print_alloc(),
+    % https://blog.heroku.com/logplex-down-the-rabbit-hole
+    _GC = [erlang:garbage_collect(Proc, [{type, 'major'}]) || Proc <- processes()],
+    logger:log(info, "Garbage was collected manually"),
+    ok = print_alloc().
+
+print_alloc() ->
+    logger:log(info, "Allocated memory : ~p kB ~n", [(recon_alloc:memory(allocated)) / 1024]),
+    logger:log(info, "Reported memory usage : ~p kB ~n", [(recon_alloc:memory(usage)) / 1024]),
+    logger:log(info, "Actual memory usage : ~p kB ~n", [(recon_alloc:memory(used)) / 1024]),
+    ok.
+
+mem() ->
+    [{K,V / math:pow(1024,3)} || {K,V} <- erlang:memory()].
+    % [erlang:garbage_collect(X) || X <- processes()].
 % match_crdt(Id, Tab) ->
 %   % [[{MatchedId, Data}] | Rest ] = ets:match(Tab, '$1').
 %   _DeltaVal = #dv{},
