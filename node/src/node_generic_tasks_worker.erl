@@ -48,7 +48,7 @@ stop() ->
 
 
 init({}) ->
-    io:format("Initializing Node Server~n"),
+    logger:log(notice, "Initializing Node Server~n"),
     RestartInterval = node_config:get(generic_tasks_restart_interval, ?MIN),
     % erlang:send_after(5000, self(), {start_all_tasks}),
     % {ok, #state{}}.
@@ -57,8 +57,8 @@ init({}) ->
 
 
 handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
-    io:format("=== State is ~p ===~n", [State]),
-    io:format("=== Finding task ~p ===~n", [Name]),
+    logger:log(info, "=== State is ~p ===~n", [State]),
+    logger:log(info, "=== Finding task ~p ===~n", [Name]),
     CanRunTask = can_run_task(length(RunningTasks)),
 		case CanRunTask of
 			true ->
@@ -67,29 +67,29 @@ handle_call({start_task, Name}, _From, State = #state{running_tasks=RunningTasks
 		      {ok, TaskFound} ->
 		        NewFinishedTasksList = FinishedTasks -- [TaskFound],
 		        TaskFun = element(3,TaskFound),
-		        io:format("=== Task chosen ~p ===~n", [TaskFound]),
+		        logger:log(info, "=== Task chosen ~p ===~n", [TaskFound]),
 		        {Pid, Ref} = spawn_monitor(TaskFun),
-		        io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
+		        logger:log(info, "=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
 		        RunningTask = erlang:insert_element(4, TaskFound, {Pid, Ref}),
-		        io:format("=== Running Task ~p ===~n", [RunningTask]),
+		        logger:log(info, "=== Running Task ~p ===~n", [RunningTask]),
 		        {reply, RunningTask,  State#state{running_tasks=RunningTasks ++ [RunningTask], finished_tasks=NewFinishedTasksList}};
 		      Error ->
 		        {reply, Error, State}
 		    end;
 			false ->
-				io:format("=== Cannot run task, device is overloaded ===~n"),
+				logger:log(notice, "=== Cannot run task, device is overloaded ===~n"),
 				{reply, ko, State}
 			end;
 
 
 handle_call({find_and_start_task}, _From, State = #state{running_tasks=RTasks, finished_tasks=FinishedTasks}) ->
     RunningTasks = maybe_tuple_to_list(RTasks),
-    io:format("=== State is ~p ===~n", [State]),
-    io:format("=== Finding new task ===~n"),
+    logger:log(info, "=== State is ~p ===~n", [State]),
+    logger:log(info, "=== Finding new task ===~n"),
     TasksList = node_generic_tasks_server:get_all_tasks(),
-    io:format("=== Tasks list ~p ===~n", [TasksList]),
+    logger:log(info, "=== Tasks list ~p ===~n", [TasksList]),
     FilteredTaskList = filter_task_list(TasksList, TasksList),
-    io:format("=== FilteredTaskList ~p ===~n",[FilteredTaskList]),
+    logger:log(info, "=== FilteredTaskList ~p ===~n",[FilteredTaskList]),
     case length(FilteredTaskList) of
       0 ->
         {reply, no_tasks_to_run, State};
@@ -101,14 +101,14 @@ handle_call({find_and_start_task}, _From, State = #state{running_tasks=RTasks, f
           true ->
             NewFinishedTasksList = FinishedTasks -- [RandomTask],
             TaskFun = element(3,RandomTask),
-            io:format("=== Task chosen ~p ===~n", [RandomTask]),
+            logger:log(info, "=== Task chosen ~p ===~n", [RandomTask]),
             {Pid, Ref} = spawn_monitor(TaskFun),
-            io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
+            logger:log(info, "=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
             RunningTask = erlang:insert_element(4, RandomTask, {Pid, Ref}),
-            io:format("=== Running Task ~p ===~n", [RunningTask]),
+            logger:log(info, "=== Running Task ~p ===~n", [RunningTask]),
             {reply, RunningTask, State#state{running_tasks=RunningTasks ++ [RunningTask], finished_tasks=NewFinishedTasksList}};
           false ->
-				    io:format("=== Cannot run task, device is overloaded ===~n"),
+				    logger:log(info, "=== Cannot run task, device is overloaded ===~n"),
             {reply, ko, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}}
         end
     end;
@@ -137,7 +137,7 @@ handle_info({start_all_tasks}, State =
         restart_interval=RestartInterval}) ->
     case start_all_tasks_periodically(RunningTasks, FinishedTasks) of
       {ko, no_tasks_to_run} ->
-        io:format("=== No tasks to run ===~n"),
+        logger:log(info, "=== No tasks to run ===~n"),
         {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
       {NewRunningTasksList, NewFinishedTasksList} ->
         {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
@@ -150,7 +150,7 @@ handle_info(timeout, State =
         restart_interval=RestartInterval}) ->
   case start_all_tasks_periodically(RunningTasks, FinishedTasks) of
     {ko, no_tasks_to_run} ->
-      io:format("=== No tasks to run ===~n"),
+      logger:log(info, "=== No tasks to run ===~n"),
       {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
     {NewRunningTasksList, NewFinishedTasksList} ->
       {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
@@ -159,43 +159,43 @@ handle_info(timeout, State =
 
 
 handle_info({'DOWN', Ref, process, Pid, Info}, State = #state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}) ->
-    io:format("== Pid ~p has ended ===~n", [Pid]),
+    logger:log(notice, "== Pid ~p has ended ===~n", [Pid]),
     RunningTasksList = [{Name, Targets, Fun, {TaskPid, TaskRef}} || {Name, Targets, Fun, {TaskPid, TaskRef}} <- RunningTasks, TaskPid =:= Pid],
     case length(RunningTasksList) of
       0 ->
-        io:format("=== A process other than a task finished ===~n"),
+        logger:log(info, "=== A process other than a task finished ===~n"),
         {noreply, State};
       1 ->
         {Name, Targets, Fun, {TaskPid, TaskRef}} = hd(RunningTasksList),
         case Info of
-          normal -> io:format("=== Task ~p with Pid ~p finished gracefully (~p) ===~n", [Name, Pid, Info]);
-          _ -> io:format("=== Problem: ~p ===~n", [Info])
+          normal -> logger:log(info, "=== Task ~p with Pid ~p finished gracefully (~p) ===~n", [Name, Pid, Info]);
+          _ -> logger:log(error, "=== Problem: ~p ===~n", [Info])
         end,
         erlang:demonitor(Ref),
         NewRunningTasksList = lists:delete({Name, Targets, Fun, {TaskPid, TaskRef}}, RunningTasks),
         NewFinishedTasksList = lists:append(FinishedTasks, [{Name, Targets, Fun}]),
-        io:format("=== NRTL ~p , NFTL ~p ===~n", [NewRunningTasksList, NewFinishedTasksList]),
+        logger:log(info, "=== NRTL ~p , NFTL ~p ===~n", [NewRunningTasksList, NewFinishedTasksList]),
         {noreply, State#state{running_tasks=NewRunningTasksList, finished_tasks=NewFinishedTasksList}}
     end;
 
 handle_info({'EXIT', _From, Reason}, State) ->
-    io:format("=== Supervisor sent an exit signal (reason: ~p), terminating Gen Server ===~n", [Reason]),
+    logger:log(error, "=== Supervisor sent an exit signal (reason: ~p), terminating Gen Server ===~n", [Reason]),
     {stop, Reason, State};
 
 handle_info(Msg, State) ->
-  io:format("=== Unknown message: ~p~n", [Msg]),
+  logger:log(notice, "=== Unknown message: ~p~n", [Msg]),
   {noreply, State}.
 
 terminate(normal, _State) ->
-  io:format("=== Normal Gen Server termination ===~n"),
+  logger:log(info, "=== Normal Gen Server termination ===~n"),
   ok;
 
 terminate(shutdown, _State) ->
-  io:format("=== Supervisor asked to terminate Gen Server (reason: shutdown) ===~n"),
+  logger:log(info, "=== Supervisor asked to terminate Gen Server (reason: shutdown) ===~n"),
   ok;
 
 terminate(Reason, _State) ->
-  io:format("=== Terminating Gen Server (reason: ~p) ===~n",[Reason]),
+  logger:log(info, "=== Terminating Gen Server (reason: ~p) ===~n",[Reason]),
   ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -216,9 +216,9 @@ get_device() ->
 
 can_run_task(RunningTasksCount) ->
   {ok, CpuLoad} = node_utils_server:get_cpu_usage(),
-  io:format("=== CPU load ~.2f ===~n",[CpuLoad]),
+  logger:log(notice, "=== CPU load ~.2f ===~n",[CpuLoad]),
 	DeviceType = get_device(),
-	io:format("=== Device is ~p ===~n",[DeviceType]),
+	logger:log(notice, "=== Device is ~p ===~n",[DeviceType]),
 	TresholdReached = case DeviceType of
 		"grisp" ->
 			if RunningTasksCount =< 2 -> false;
@@ -229,7 +229,7 @@ can_run_task(RunningTasksCount) ->
 				true -> true
 			end
 	end,
-	io:format("=== Is threshold reached? ~p ===~n",[TresholdReached]),
+	logger:log(info, "=== Is threshold reached? ~p ===~n",[TresholdReached]),
 	CanRun = if CpuLoad < 50, TresholdReached =:= false -> true;
 		true -> false
 	end,
@@ -238,8 +238,8 @@ can_run_task(RunningTasksCount) ->
 
 filter_task_list(TasksList, RTasks) ->
     RunningTasks = maybe_tuple_to_list(RTasks),
-    lager:info("Task List in filter_task_list = ~p ~n ", [TasksList]),
-    lager:info("Running List in filter_task_list = ~p ~n ", [RunningTasks]),
+    logger:log(info, "Task List in filter_task_list = ~p ~n ", [TasksList]),
+    logger:log(info, "Running List in filter_task_list = ~p ~n ", [RunningTasks]),
 
     FilteredTaskList = lists:filter(
     fun ({Name, Targets, _}) ->
@@ -257,7 +257,7 @@ filter_task_list(TasksList, RTasks) ->
           end
         end, RunningTasks)
     end,
-    io:format("=== Task is already running : ~p - Node is target : ~p ===~n", [TaskIsRunning, IsTarget]),
+    logger:log(info, "=== Task is already running : ~p - Node is target : ~p ===~n", [TaskIsRunning, IsTarget]),
     IsCanditate = if TaskIsRunning =:= false, IsTarget =:= true -> true;
        true -> false
     end,
@@ -266,9 +266,9 @@ filter_task_list(TasksList, RTasks) ->
     FilteredTaskList.
 
 start_all_tasks_periodically(RunningTasks, FinishedTasks) ->
-  io:format("=== Finding new task ===~n"),
+  logger:log(info, "=== Finding new task ===~n"),
   TasksList = node_generic_tasks_server:get_all_tasks(),
-  io:format("=== Tasks list ~p ===~n", [TasksList]),
+  logger:log(info, "=== Tasks list ~p ===~n", [TasksList]),
   FilteredTaskList = filter_task_list(TasksList, RunningTasks),
   case lists:length(FilteredTaskList) of
     0 ->
@@ -281,14 +281,14 @@ start_all_tasks_periodically(RunningTasks, FinishedTasks) ->
           case CanRunTask of
       			true ->
               TaskFun = element(3, Task),
-              io:format("=== Task chosen ~p ===~n", [Task]),
+              logger:log(info, "=== Task chosen ~p ===~n", [Task]),
               {Pid, Ref} = spawn_monitor(TaskFun),
-              io:format("=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
+              logger:log(info, "=== Spawned Task fun : PID ~p - Ref ~p ===~n", [Pid, Ref]),
               RunningTask = erlang:insert_element(4, Task, {Pid, Ref}),
-              io:format("=== Running Task ~p ===~n", [RunningTask]),
+              logger:log(info, "=== Running Task ~p ===~n", [RunningTask]),
               {Task, StartedTasks ++ RunningTask};
             false ->
-			        io:format("=== Cannot run task, device is overloaded ===~n"),
+			        logger:log(notice, "=== Cannot run task, device is overloaded ===~n"),
               {Task, StartedTasks}
           end
         end

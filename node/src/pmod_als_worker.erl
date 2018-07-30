@@ -59,7 +59,7 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 %% ===================================================================
 
 init([]) ->
-    io:format("Starting ambient light worker ~n"),
+    logger:log(info, "Starting ambient light worker ~n"),
     application:set_env(grisp, devices, [{spi2, pmod_als}]),
     application:set_env(grisp, devices,
 			[{uart, pmod_maxsonar}]),
@@ -88,21 +88,21 @@ handle_call({set_gen_fun, _GenFun}, _From, State) ->
     % FunctionsList = sets:to_list(Functions),
     % case length(FunctionsList) of
     %   0 ->
-    %     io:format("=== No other function is present in the CRDT, adding new gen fun ===~n"),
+    %     logger:log(info, "=== No other function is present in the CRDT, adding new gen fun ===~n"),
     %     lasp:update({<<"functions">>, state_orset}, {add, GenFun}, self());
     %   1 ->
-    %     io:format("=== Another function is present in the CRDT, removing old fun and adding new one ===~n"),
+    %     logger:log(info, "=== Another function is present in the CRDT, removing old fun and adding new one ===~n"),
     %     OldFun = hd(FunctionsList),
     %     lasp:update({<<"functions">>, state_orset}, {rmv, OldFun}, self());
     %   _ ->
-    %     io:format("=== More then one function is present in the CRDT, a new function has been added recently
+    %     logger:log(info, "=== More then one function is present in the CRDT, a new function has been added recently
     %     and the previous one has not yet been removed, waiting for CRDT convergence ===~n")
     % end,
     {reply, ok, State, 5000};
 handle_call({set_gen_fun}, _From, State) ->
-    % InverseHyperbolicArctanFun = fun() -> io:format("atanh = ~f~n", [math:atanh(1 - (1/math:pow(6,20)))]) end,
+    % InverseHyperbolicArctanFun = fun() -> logger:log(info, "atanh = ~f~n", [math:atanh(1 - (1/math:pow(6,20)))]) end,
     % lasp:update({<<"functions">>, state_orset}, {add, InverseHyperbolicArctanFun}, self()),
-    % io:format("=== Added Hyperbolic Arctangent Function ===~n"),
+    % logger:log(info, "=== Added Hyperbolic Arctangent Function ===~n"),
     {reply, ok, State, 5000};
 % handle_call({get_gen_fun}, _From, State) ->
 %   % Function = get_gen_fun(),
@@ -115,8 +115,8 @@ handle_info(timeout, State) ->
     Sonar = pmod_maxsonar:get(),
     % Shade = dict:fetch(Raw, State#state.luminosity),
     % dict:update(Raw, fun(Shade) -> #shade{measurements = Shade#shade.measurements ++ [Raw], count = Shade#shade.count + 1})
-    io:format("Raw = ~p ~n", [Raw]),
-    io:format("Raw Sonar = ~p ~n", [Sonar]),
+    logger:log(info, "Raw = ~p ~n", [Raw]),
+    logger:log(info, "Raw Sonar = ~p ~n", [Sonar]),
     dict:update(Raw,
 		fun (Shade) ->
 			#shade{measurements = Shade#shade.measurements ++ [Raw],
@@ -139,16 +139,16 @@ handle_info(timeout, State) ->
     %     body
     % end
     % store_ambient_light(State#state.luminosity),
-    % io:format("=== ALS raw value = ~p ~n", [Raw]),
+    % logger:log(info, "=== ALS raw value = ~p ~n", [Raw]),
     {noreply, State, 3000};
 handle_info(Msg, State) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, State}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 terminate(Reason, _S) ->
-    io:format("=== Terminating ALS server (reason: "
+    logger:log(info, "=== Terminating ALS server (reason: "
 	      "~p) ===~n",
 	      [Reason]),
     ok.

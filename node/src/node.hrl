@@ -6,6 +6,20 @@
 -include_lib("kernel/include/file.hrl").
 
 %%====================================================================
+%% Defaults
+%%====================================================================
+
+-define(PMOD_ALS_RANGE, lists:seq(1, 255, 1)).
+-define(ALS_DEFAULT_RATE,   ?HMIN).
+-define(ALS_DEFAULT_PROPAGATION_TRESHOLD,   20).
+-define(ALS_RAW,    case application:get_env(node, emulate_als, false) of
+    true ->
+        rand:uniform(length(?PMOD_ALS_RANGE));
+    _ ->
+        pmod_als:raw()
+end).
+
+%%====================================================================
 %% Time Intervals (ms)
 %%====================================================================
 
@@ -21,8 +35,9 @@
 %% Timers
 %%====================================================================
 
--define(TIME_MULTIPLIER,      lists:last(tuple_to_list(application:get_env(node, time_multiplier, {ok, 1})))).
--define(SLEEP(Interval),                                     timer:sleep((round(Interval/?TIME_MULTIPLIER)))).
+% -define(TIME_MULTIPLIER,      lists:last(tuple_to_list(application:get_env(node, time_multiplier, 1)))).
+-define(TIME_MULTIPLIER,          application:get_env(node, time_multiplier, 1)).
+-define(SLEEP(Interval),        timer:sleep((round(Interval/?TIME_MULTIPLIER)))).
 
 -define(PAUSEMS,                     ?SLEEP(?MS)).
 -define(PAUSE1,                     ?SLEEP(?ONE)).
@@ -66,7 +81,8 @@
 -define(DAN,      lists:seq(7,9,1) ).
 -define(IGOR,   lists:seq(10,12,1) ).
 
--define(BOARDS(Name),   [ list_to_atom(lists:flatten(lists:concat([node@my_grisp_board, "_", X]))) || X <- Name ] ).
+% -define(BOARDS(Name),   [ list_to_atom(lists:flatten(unicode:characters_to_list(["node@my_grisp_board", "_", integer_to_list(X)], utf8))) || X <- Name ] ).
+-define(BOARDS(Name),   [ list_to_atom(unicode:characters_to_list(["node@my_grisp_board", "_", integer_to_list(X)], utf8)) || X <- Name ] ).
 
 %%====================================================================
 %% Child Specifications

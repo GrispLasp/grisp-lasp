@@ -2,6 +2,8 @@
 
 -behaviour(gen_server).
 
+-include_lib("node.hrl").
+
 %% API
 -export([start_link/0, terminate/0]).
 -export([get_cpu_usage/0]).
@@ -32,17 +34,19 @@ terminate() -> gen_server:call(?MODULE, {terminate}).
 %% ===================================================================
 
 init([]) ->
-    io:format("Starting a node utility server ~n"),
-		S1 = scheduler:sample_all(),
-		State = #samples_state{s1 = S1},
+    logger:log(info, "Starting a node utility server ~n"),
+	S1 = scheduler:sample_all(),
+	State = #samples_state{s1 = S1},
+	GCInterval = node_config:get(gc_interval, ?MIN),
     erlang:send_after(5000, self(), {get_cpu_usage}),
+    erlang:send_after(GCInterval, self(), {gc, GCInterval}),
 		% {ok, State, 5000}.
-		{ok, State}.
+	{ok, State}.
 
 handle_call({get_cpu_usage}, From, _State = #samples_state{s1 = S1, sysload = _Load}) ->
 	S2 = scheduler:sample_all(),
 	[Total|_Schedulers] = node_util:utilization_sample(S1,S2),
-	io:format("=== Getting CPU usage : ~p ===~n", [Total]),
+	logger:log(info, "=== Getting CPU usage : ~p ===~n", [Total]),
 	{total, NewLoad, _Percentage} = Total,
 	NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
 	Self = self(),
@@ -58,20 +62,25 @@ handle_call(stop, _From, State) ->
 handle_info({get_cpu_usage}, _State = #samples_state{s1 = S1, sysload = _Load}) ->
 		S2 = scheduler:sample_all(),
 		[Total|_Schedulers] = node_util:utilization_sample(S1,S2),
-		io:format("=== Getting CPU usage since last util() call: ~p ===~n", [Total]),
+		logger:log(info, "=== Getting CPU usage since last util() call: ~p ===~n", [Total]),
 		{total, NewLoad, _Percentage} = Total,
 		NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
 		erlang:send_after(5000, self(), {get_cpu_usage}),
     {noreply, NewState};
 
+handle_info({gc, GCInterval}, State) ->
+	node_storage_util:gc(),
+	erlang:send_after(GCInterval, self(), {gc, GCInterval}),
+	{noreply, State};
+
 handle_info(Msg, State) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, State}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 terminate(Reason, _S) ->
-    io:format("=== Terminating node utily server (reason: ~p) ===~n",[Reason]),
+    logger:log(info, "=== Terminating node utily server (reason: ~p) ===~n",[Reason]),
     ok.
 
 code_change(_OldVsn, S, _Extra) -> {ok, S}.

@@ -36,7 +36,7 @@ find_task(Name) -> gen_server:call(?MODULE, {find_task, Name}).
 %% ===================================================================
 
 init([]) ->
-  io:format("Starting a generic tasks server ~n"),
+  logger:log(info, "Starting a generic tasks server ~n"),
   %% Ensure Gen Server gets notified when his supervisor dies
   Vars = node_config:get(generic_tasks_sets_names, []),
   node_util:declare_crdts(Vars),
@@ -45,7 +45,7 @@ init([]) ->
 
 % TODO: add infinite execution of a task
 handle_call({add_task, {Name, Targets, Fun}}, _From, State) ->
-  io:format("=== ~p ~p ~p ===~n", [Name, Targets, Fun]),
+  logger:log(info, "=== ~p ~p ~p ===~n", [Name, Targets, Fun]),
   Task = {Name, Targets, Fun},
   lasp:update({<<"tasks">>, state_orset}, {add, Task}, self()),
   {reply, ok, State};
@@ -58,12 +58,12 @@ handle_call({remove_task, TaskName}, _From, State) ->
   case length(TaskToRemove) of
     1 ->
       ExtractedTask = hd(TaskToRemove),
-      io:format("=== Task to Remove ~p ===~n", [ExtractedTask]),
+      logger:log(info, "=== Task to Remove ~p ===~n", [ExtractedTask]),
       lasp:update({<<"tasks">>, state_orset}, {rmv, ExtractedTask}, self());
     0 ->
-      io:format("=== Task does not exist ===~n");
+      logger:log(info, "=== Task does not exist ===~n");
     _ ->
-      io:format("=== Error, more than 1 task === ~n")
+      logger:log(info, "=== Error, more than 1 task === ~n")
   end,
   {reply, ok, State};
 
@@ -97,13 +97,13 @@ handle_call(stop, _From, State) ->
 
 
 handle_info(Msg, State) ->
-    io:format("=== Unknown message: ~p~n", [Msg]),
+    logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, State}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 terminate(Reason, _S) ->
-  io:format("=== Terminating Generic server (reason: ~p) ===~n",[Reason]),
+  logger:log(error, "=== Terminating Generic server (reason: ~p) ===~n",[Reason]),
   ok.
 
 code_change(_OldVsn, S, _Extra) ->

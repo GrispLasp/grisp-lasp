@@ -6,7 +6,7 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
   WaitFun = fun(State) ->
       receive
       after (PeriodicTime) ->
-        io:format("State is ~p and periodicTime is ~p ===~n", [State, PeriodicTime]),
+        logger:log(info, "State is ~p and periodicTime is ~p ===~n", [State, PeriodicTime]),
         temp_sensor(State, PeriodicTime)
       end
   end,
@@ -21,28 +21,28 @@ temp_sensor({Counter, Temps}, PeriodicTime) ->
   Average = fun(List) -> Sum(List)/length(List) end,
 
   SensorFun = fun() ->
-    io:format("=== Counter is at ~p ===~n", [Counter]),
-    % io:format("=== Temp list : ~p ===~n",[Temps]),
-    lager:info("=== Temp list : ~p ===~n",[Temps]),
+    logger:log(info, "=== Counter is at ~p ===~n", [Counter]),
+    % logger:log(info, "=== Temp list : ~p ===~n",[Temps]),
+    logger:log(info, "=== Temp list : ~p ===~n",[Temps]),
     case Counter of
       5 ->
-        io:format("=== Timer has ended, aggregating data and updating CRDT... === ~n"),
+        logger:log(info, "=== Timer has ended, aggregating data and updating CRDT... === ~n"),
         AverageTemp = Average(Temps),
-        io:format("=== Average temp in past hour is ~p ===~n", [AverageTemp]),
+        logger:log(info, "=== Average temp in past hour is ~p ===~n", [AverageTemp]),
         {ok, TempsCRDT} = lasp:query({<<"temp">>, state_orset}),
         TempsList = sets:to_list(TempsCRDT),
-        % io:format("=== Temps CRDT : ~p ===~n", [TempsList]),
-        lager:info("=== Temps CRDT : ~p ===~n", [TempsList]),
+        % logger:log(info, "=== Temps CRDT : ~p ===~n", [TempsList]),
+        logger:log(info, "=== Temps CRDT : ~p ===~n", [TempsList]),
         OldCrdtData = [{Node, OldAvg, HourCounter, HourAvg, HourData} || {Node, OldAvg, HourCounter, HourAvg, HourData} <- TempsList, Node =:= node()],
-        % io:format("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
-        lager:info("=== Old CRDT data is ~p ===~n",[OldCrdtData]),
+        % logger:log(info, "=== Old CRDT data is ~p ===~n",[OldCrdtData]),
+        logger:log(info, "=== Old CRDT data is ~p ===~n",[OldCrdtData]),
         case length(OldCrdtData) of
           0 ->
             lasp:update({<<"temp">>,state_orset},{add,{node(), AverageTemp, 1, [AverageTemp], [AverageTemp]}}, self());
           1 ->
             {Node, OldAvg, HourCounter, HourAvg, HourData} = hd(OldCrdtData),
             NewAverageTemp = ((OldAvg * HourCounter)/(HourCounter+1))+(AverageTemp*(1/(HourCounter+1))),
-            io:format("=== New average temp : ~p ===~n",[NewAverageTemp]),
+            logger:log(info, "=== New average temp : ~p ===~n",[NewAverageTemp]),
             lasp:update({<<"temp">>, state_orset}, {rmv, {Node, OldAvg, HourCounter, HourAvg, HourData}}, self()),
             lasp:update({<<"temp">>,state_orset},{add,{node(), NewAverageTemp, HourCounter+1, HourAvg ++ [NewAverageTemp], HourData ++ [AverageTemp]}}, self())
         end,
@@ -86,12 +86,12 @@ sonar_sensor(Mode, NodeTarget) ->
   SonarListener = fun B() ->
     receive
       Msg ->
-      %  io:format("=== received ~p ===~n", [Mode]),
+      %  logger:log(info, "=== received ~p ===~n", [Mode]),
         grisp_led:color(1,red),
         grisp_led:color(2,red),
         PidSonar = whereis(pmod_maxsonar),
         erlang:suspend_process(PidSonar),
-        io:format("suspending_process~n"),
+        logger:log(notice, "suspending_process~n"),
         timer:sleep(750),
         erlang:resume_process(PidSonar),
         B()

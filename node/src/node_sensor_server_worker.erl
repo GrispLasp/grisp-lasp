@@ -26,7 +26,7 @@ terminate(Sensor_type) ->
 % This is called when a connection is made to the server
 init([]) ->
     SensorList = [],
-    io:format("Gen server for sensors has been initialized ~n"),
+    logger:log(info, "Gen server for sensors has been initialized ~n"),
     {ok, SensorList}.
 
 % handle_call is invoked in response to gen_server:call
