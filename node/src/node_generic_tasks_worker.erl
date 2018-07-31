@@ -140,7 +140,7 @@ handle_info({start_all_tasks}, State =
         logger:log(info, "=== No tasks to run ===~n"),
         {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
       {NewRunningTasksList, NewFinishedTasksList} ->
-        {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
+        {noreply, State#state{running_tasks=RunningTasks ++ [NewRunningTasksList], finished_tasks=NewFinishedTasksList}, RestartInterval}
       end;
 
 
@@ -153,7 +153,7 @@ handle_info(timeout, State =
       logger:log(info, "=== No tasks to run ===~n"),
       {noreply, State#state{running_tasks=RunningTasks, finished_tasks=FinishedTasks}, RestartInterval};
     {NewRunningTasksList, NewFinishedTasksList} ->
-      {noreply, State#state{running_tasks=RunningTasks ++ NewRunningTasksList, finished_tasks=NewFinishedTasksList}, RestartInterval}
+      {noreply, State#state{running_tasks=RunningTasks ++ [NewRunningTasksList], finished_tasks=NewFinishedTasksList}, RestartInterval}
     end;
 
 
