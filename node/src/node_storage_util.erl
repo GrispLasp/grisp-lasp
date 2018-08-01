@@ -388,14 +388,14 @@ gc() ->
     % ok = print_alloc().
     ok.
 
-print_alloc() ->
-    logger:log(info, "Allocated memory : ~p kB ~n", [(recon_alloc:memory(allocated)) / 1024]),
-    logger:log(info, "Reported memory usage : ~p kB ~n", [(recon_alloc:memory(usage)) / 1024]),
-    logger:log(info, "Actual memory usage : ~p kB ~n", [(recon_alloc:memory(used)) / 1024]),
-    ok.
+% print_alloc() ->
+%     logger:log(info, "Allocated memory : ~p kB ~n", [(recon_alloc:memory(allocated)) / 1024]),
+%     logger:log(info, "Reported memory usage : ~p kB ~n", [(recon_alloc:memory(usage)) / 1024]),
+%     logger:log(info, "Actual memory usage : ~p kB ~n", [(recon_alloc:memory(used)) / 1024]),
+%     ok.
 
 mem() ->
-  [{X, erlang:round(recon_alloc:memory(X) / math:pow(1024,2))} || X <- [allocated, used, usage]].
+  [{X, erlang:round(recon_alloc:memory(X) / 1024)} || X <- [allocated, used, usage]].
     % [{K,V / math:pow(1024,3)} || {K,V} <- erlang:memory()].
     % [erlang:garbage_collect(X) || X <- processes()].
 % match_crdt(Id, Tab) ->

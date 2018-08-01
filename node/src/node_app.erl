@@ -57,9 +57,10 @@ start(_StartType, _StartArgs) ->
     PeerConfig = lasp_partisan_peer_service:manager(),
     logger:log(notice, "The manager used is ~p ~n", [PeerConfig]),
 
-    node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:nav_sensor(alt, press_out) end }),
-    node_generic_tasks_worker:start_task(tasknav),
 
+    % node_generic_tasks_server:add_task({tasknav2, all, fun () -> logger:log(notice, "PRESS = ~p ~n", [pmod_nav(alt, [press_out])]) end }),
+    % node_generic_tasks_worker:start_task(tasknav),
+    add_task_meteo(),
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
@@ -113,6 +114,12 @@ add_task1() ->
     Interval = node_config:get(temp_stream_interval, ?HMIN),
     node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, Interval) end }),
     node_generic_tasks_worker:start_task(task1).
+
+add_task_meteo() ->
+    SampleCount = 30,
+    SampleInterval = ?FIVE,
+    node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:meteorological_statistics(SampleCount,SampleInterval) end }),
+    node_generic_tasks_worker:start_task(tasknav).
 
 myfit() ->
   {Intercept, Slope} = 'Elixir.Numerix.LinearRegression':fit([1.3, 2.1, 3.7, 4.2], [2.2, 5.8, 10.2, 11.8]),
