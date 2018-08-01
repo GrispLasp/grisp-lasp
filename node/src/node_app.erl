@@ -57,6 +57,9 @@ start(_StartType, _StartArgs) ->
     PeerConfig = lasp_partisan_peer_service:manager(),
     logger:log(notice, "The manager used is ~p ~n", [PeerConfig]),
 
+    node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:nav_sensor(alt, press_out) end }),
+    node_generic_tasks_worker:start_task(tasknav),
+
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------

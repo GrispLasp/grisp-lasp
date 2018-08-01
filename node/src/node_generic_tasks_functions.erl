@@ -1,6 +1,11 @@
 -module(node_generic_tasks_functions).
 -compile(export_all).
 
+nav_sensor(Comp, Register) ->
+  grisp:add_device(spi1, pmod_nav),
+  % logger:log(info, "Value = ~p ~n", pmod_nav:read(alt, [press_out])),
+  logger:log(info, "Value = ~p ~n", pmod_nav:read(Comp, [Register])).
+
 temp_sensor({Counter, Temps}, PeriodicTime) ->
 
   WaitFun = fun(State) ->
