@@ -65,7 +65,7 @@ start(_StartType, _StartArgs) ->
     % node_generic_tasks_worker:start_task(tasknav),
 
 
-    % {_Task, _Targets, _Fun, _} = add_task_meteo(),
+    {_Task, _Targets, _Fun, _} = add_task_meteo(),
     % ?PAUSE10,
     % {_Task, _Targets, _Fun, _} = add_task_meteo_union(),
 
@@ -126,8 +126,8 @@ add_task1() ->
 add_task_meteo() ->
     % SampleCount = 30,
     % SampleInterval = ?FIVE,
-    SampleCount = 5,
-    SampleInterval = ?TEN,
+    SampleCount = 50,
+    SampleInterval = ?MIN,
     Trigger = 2,
     node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:meteorological_statistics(SampleCount,SampleInterval,Trigger) end }),
     node_generic_tasks_worker:start_task(tasknav).

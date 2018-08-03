@@ -65,7 +65,7 @@ handle_info({get_cpu_usage}, _State = #samples_state{s1 = S1, sysload = _Load}) 
 		logger:log(info, "=== Getting CPU usage since last util() call: ~p ===~n", [Total]),
 		{total, NewLoad, _Percentage} = Total,
 		NewState = #samples_state{s1 = S2, sysload = NewLoad * 100},
-		erlang:send_after(5000, self(), {get_cpu_usage}),
+		erlang:send_after(?MIN, self(), {get_cpu_usage}),
     {noreply, NewState};
 
 handle_info({gc, GCInterval}, State) ->

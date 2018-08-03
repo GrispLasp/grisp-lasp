@@ -10,6 +10,8 @@ REBAR            ?= $(shell which rebar3)
 # REVISION 		    ?= $(shell git rev-parse --short HEAD)
 GRISPAPP         ?= $(shell basename `find src -name "*.app.src"` .app.src)
 BASE_DIR         ?= $(shell pwd)
+DEPLOYMENTS_DIR		?= $(BASE_DIR)/priv/deployment_args
+GRISPFILES_DIR		?= $(BASE_DIR)/grisp/grisp_base/files
 CACHE_DIR         ?= $(HOME)/.cache/rebar3
 # ERLANG_BIN       ?= $(shell dirname $(shell which erl))
 # HOSTNAME         ?= $(shell hostname)
@@ -25,7 +27,7 @@ VERSION 	       ?= 0.1.0
 
 # .PHONY: grispbuild rel deps test plots dcos logs fpm no-cfg-build tarball-build build
 
-.PHONY: compile shell 2shell 3shell deploy rel stage \
+.PHONY: compile shell 2shell 3shell deploy 10deploy 11deploy rel stage \
 	# cleaning targets :
 	clean buildclean grispclean cacheclean elixirclean checkoutsclean ⁠\
 	# currently not working targets :
@@ -102,6 +104,14 @@ stage:
 	$(REBAR) release -d
 
 deploy:
+	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
+
+10deploy:
+	cp $(DEPLOYMENTS_DIR)/10/grisp.ini.mustache $(GRISPFILES_DIR)/grisp.ini.mustache
+	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
+
+11deploy:
+	cp $(DEPLOYMENTS_DIR)/11/grisp.ini.mustache $(GRISPFILES_DIR)/grisp.ini.mustache
 	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
 
 include tools.mk
