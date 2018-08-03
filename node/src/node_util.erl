@@ -94,23 +94,24 @@ utilization_sample(S1,S2) ->
   % ?PAUSE10,
   % S2 = scheduler:sample_all(),
   LS = scheduler:utilization(S1,S2),
-  lists:foreach(fun(Scheduler) ->
-                  case Scheduler of
-                    {total, F, P} when is_float(F) ->
-                      logger:log(info, "=== Total usage = ~p ===~n", [P]);
-                    {weighted, F, P} when is_float(F) ->
-                      logger:log(info, "=== Weighted usage = ~p ===~n", [P]);
-                    {normal, Id, F, P} when is_float(F) ->
-                      logger:log(info, "=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
-                    {cpu, Id, F, P} when is_float(F) ->
-                      logger:log(info, "=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
-                    {io, Id, F, P} when is_float(F) ->
-                      logger:log(info, "=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
-                    _ ->
-                      logger:log(info, "=== Scheduler = ~p ===~n", [Scheduler])
-                  end
-                end, LS),
-    LS.
+  % lists:foreach(fun(Scheduler) ->
+  %                 case Scheduler of
+  %                   {total, F, P} when is_float(F) ->
+  %                     logger:log(info, "=== Total usage = ~p ===~n", [P]);
+  %                   {weighted, F, P} when is_float(F) ->
+  %                     logger:log(info, "=== Weighted usage = ~p ===~n", [P]);
+  %                   {normal, Id, F, P} when is_float(F) ->
+  %                     logger:log(info, "=== Normal Scheduler ~p usage = ~p ===~n", [Id,P]);
+  %                   {cpu, Id, F, P} when is_float(F) ->
+  %                     logger:log(info, "=== Dirty-CPU ~p Scheduler usage = ~p ===~n", [Id,P]);
+  %                   {io, Id, F, P} when is_float(F) ->
+  %                     logger:log(info, "=== Dirty-IO ~p Scheduler usage = ~p ===~n", [Id,P]);
+  %                   _ ->
+  %                     logger:log(info, "=== Scheduler = ~p ===~n", [Scheduler])
+  %                 end
+  %               end, LS),
+  %   LS.
+  LS.
 
 
 get_nav() ->
@@ -123,3 +124,18 @@ get_nav() ->
         _ ->
             {error, unknown, no_ref}
     end.
+
+%% http://erlang.org/pipermail/erlang-questions/2015-August/085743.html
+maps_update(K, F, V0, Map) ->
+     try maps:get(K, Map) of
+         V1 ->
+             maps:put(K, F(V1), Map)
+     catch
+         error:{badkey, K} ->
+             maps:put(K, V0, Map)
+     end.
+
+maps_merge(Fun, Map1, Map2) ->
+     maps:fold(fun (K, V1, Map) ->
+                   maps_update(K, fun (V2) -> Fun(K, V1, V2) end, V1, Map)
+               end, Map2, Map1).

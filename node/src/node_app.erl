@@ -22,6 +22,10 @@
 
 %% test call to Numerix
 -export([myfit/0]).
+-export([laspstream/1]).
+-export([laspread/3]).
+-export([add_task_meteo_union/0]).
+-export([add_task_meteo/0]).
 
 
 
@@ -57,10 +61,14 @@ start(_StartType, _StartArgs) ->
     PeerConfig = lasp_partisan_peer_service:manager(),
     logger:log(notice, "The manager used is ~p ~n", [PeerConfig]),
 
-
     % node_generic_tasks_server:add_task({tasknav2, all, fun () -> logger:log(notice, "PRESS = ~p ~n", [pmod_nav(alt, [press_out])]) end }),
     % node_generic_tasks_worker:start_task(tasknav),
-    add_task_meteo(),
+
+
+    {_Task, _Targets, _Fun, _} = add_task_meteo(),
+    % ?PAUSE10,
+    % {_Task, _Targets, _Fun, _} = add_task_meteo_union(),
+
     {ok, Supervisor}.
 
 %%--------------------------------------------------------------------
@@ -116,10 +124,20 @@ add_task1() ->
     node_generic_tasks_worker:start_task(task1).
 
 add_task_meteo() ->
-    SampleCount = 30,
-    SampleInterval = ?FIVE,
-    node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:meteorological_statistics(SampleCount,SampleInterval) end }),
+    % SampleCount = 30,
+    % SampleInterval = ?FIVE,
+    SampleCount = 50,
+    SampleInterval = ?MIN,
+    Trigger = 2,
+    node_generic_tasks_server:add_task({tasknav, all, fun () -> node_generic_tasks_functions:meteorological_statistics(SampleCount,SampleInterval,Trigger) end }),
     node_generic_tasks_worker:start_task(tasknav).
+
+add_task_meteo_union() ->
+    % Union# = (Trigger# -1)
+    Id = node_util:atom_to_lasp_id(union1),
+    node_generic_tasks_server:add_task({taskunion, all, fun () -> node_generic_tasks_functions:statistics_union(Id) end }),
+    node_generic_tasks_worker:start_task(taskunion).
+
 
 myfit() ->
   {Intercept, Slope} = 'Elixir.Numerix.LinearRegression':fit([1.3, 2.1, 3.7, 4.2], [2.2, 5.8, 10.2, 11.8]),
@@ -128,6 +146,57 @@ myfit() ->
 % node_generic_tasks_server:add_task({task1, all, fun () -> node_generic_tasks_functions:temp_sensor({0, []}, 3000) end }),
 % node_generic_tasks_worker:start_task(task1),
 % ets:new(Identifier, [ordered_set,named_table,public]).
-
+% lasp:query({<<"meteostats">>,state_orset}).
+% lasp:query({<<"node@Laymer">>,state_orset}).
+% lasp:query({<<"union2">>,state_orset}).
+% lasp:query({<<"chunks">>,state_orset}).
 % Generate mock temperature measurements
+% Id = {<<"union2">>,state_orset}.
+% node_generic_tasks_server:add_task({taskunion, all, fun () -> node_generic_tasks_functions:statistics_union(Id) end }).
+% node_generic_tasks_worker:start_task(taskunion).
 % node_sensor_server_worker:creates(temp),
+% lasp:union({<<"node2@Laymer">>, state_orset}, {<<"node3@Laymer">>, state_orset}, UnionId).
+% lasp:declare({<<"union2">>,state_orset},state_orset).
+% lasp:union({<<"node@Laymer">>, state_orset}, {<<"union">>, state_orset}, {<<"union2">>,state_orset}).
+laspstream(Name) ->
+    % [H|T] = lasp:query(Id),
+    Id = node_util:atom_to_lasp_id(Name),
+    lasp:stream(Id, fun
+        (_X) ->
+            logger:log(notice, "Chunks updated ~n")
+    end).
+
+
+laspread(Name,Type,Value) ->
+    % [H|T] = lasp:query(Id),
+    % F = fun(N,T,V) ->
+    % end,
+    % spawn(?MODULE, fun(N,T,V) ->
+    %     Id = node_util:atom_to_lasp_identifier(N,T),
+    %     lasp:read(Id, {value, V}),
+    %     io:format("3 chunks collected!")
+    % end, [Name,Type,Value]).
+    % spawn(lasp, read, [Id,{value, Value}]).
+    % node_app:laspread(name,val,type).
+    spawn(fun() ->
+        % Id = node_util:atom_to_lasp_identifier(chunks,state_gcounter),
+        Id = node_util:atom_to_lasp_identifier(executors,state_gset),
+        % NOTE : lasp:read() WILL block current process regardless
+        % if the minimim value has been reached, must ALWAYS be spawned in subprocess
+        lasp:read(Id, {cardinality, 3}),
+        io:format("3 chunks visible ~n"),
+        {ok, Set} = lasp:query({"<<meteostats>>", state_orset}),
+        % {ok, Set} = lasp:query({"<<executors>>", state_gset}),
+        io:format("Values = ~p ~n", sets:to_list(Set))
+    end).
+    % spawn(fun() -> lasp:read({"<<executors>>", state_gset}, {cardinality, 10}), io:format("hi !~n") end).
+    % is_process_alive(<0.1114.0>).
+    % {ok, Set} = lasp:query(Id),
+    % UniondId = hd(node_util:declare_crdts([union])),
+    %
+    % [ lasp:union(Elem, UniondId, UniondId) || Elem <- sets:to_list(Set) ].
+    % Fun = fun
+    %     (Elem) ->
+    %         lasp:union(Elem, UniodId, UnionId)
+    % end,
+    % lists:foreach(Fun, L).
