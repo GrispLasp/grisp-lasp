@@ -13,7 +13,7 @@
   0},
  {<<"lasp">>,
   {git,"https://github.com/lasp-lang/lasp.git",
-       {ref,"2d4343e23fbae574432ec6c9abcae779009dc4bf"}},
+       {ref,"102cb1930c6c38861bcd841008d1a2ee203e56c1"}},
   0},
  {<<"lasp_support">>,{pkg,<<"lasp_support">>,<<"0.0.3">>},1},
  {<<"mapz">>,{pkg,<<"mapz">>,<<"0.3.0">>},1},

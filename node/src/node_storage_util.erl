@@ -361,10 +361,11 @@ diagnose() ->
     % erlang:system_info(process_count).
     % erlang:system_info(process_limit).
     % erlang:system_info(heap_sizes).
-    % [{{A, N}, Data} || A <- [temp_alloc, eheap_alloc, binary_alloc, ets_alloc,driver_alloc, sl_alloc, ll_alloc, fix_alloc, std_alloc],{instance, N, Data} <- erlang:system_info({allocator,eheap_alloc})].
+    % [{{A, N}, Data} || A <- [eheap_alloc, binary_alloc, ets_alloc,driver_alloc],{instance, N, Data} <- erlang:system_info({allocator,eheap_alloc})].
+    % [{{A, N}, Data} || A <- [eheap_alloc],{instance, N, Data} <- erlang:system_info({allocator,eheap_alloc})].
     % bin_leak(N::pos_integer()) -> [proc_attrs()].
     % recon:bin_leak(20).
-
+    % recon_alloc:average_block_sizes(current).
     % recon_alloc:memory(allocated).
     % recon_alloc:memory(used).
     % recon_alloc:memory(usage).
@@ -375,20 +376,27 @@ diagnose() ->
 
 gc() ->
     % TODO : compare fragmentation before and after
-    ok = print_alloc(),
+    % ok = print_alloc(),
     % https://blog.heroku.com/logplex-down-the-rabbit-hole
-    _GC = [erlang:garbage_collect(Proc, [{type, 'major'}]) || Proc <- processes()],
-    logger:log(info, "Garbage was collected manually"),
-    ok = print_alloc().
+    % _GC = [erlang:garbage_collect(Proc, [{type, 'major'}]) || Proc <- processes()].
 
-print_alloc() ->
-    logger:log(info, "Allocated memory : ~p kB ~n", [(recon_alloc:memory(allocated)) / 1024]),
-    logger:log(info, "Reported memory usage : ~p kB ~n", [(recon_alloc:memory(usage)) / 1024]),
-    logger:log(info, "Actual memory usage : ~p kB ~n", [(recon_alloc:memory(used)) / 1024]),
+    _ = [logger:log(notice, "Mem = ~p ~n", [X]) || X <- mem()],
+    _GC = [erlang:garbage_collect(Proc, [{type, 'major'}]) || Proc <- processes()],
+
+    logger:log(notice, "Garbage was collected manually"),
+    _ = [logger:log(notice, "Mem = ~p ~n", [Y]) || Y <- mem()],
+    % ok = print_alloc().
     ok.
 
+% print_alloc() ->
+%     logger:log(info, "Allocated memory : ~p kB ~n", [(recon_alloc:memory(allocated)) / 1024]),
+%     logger:log(info, "Reported memory usage : ~p kB ~n", [(recon_alloc:memory(usage)) / 1024]),
+%     logger:log(info, "Actual memory usage : ~p kB ~n", [(recon_alloc:memory(used)) / 1024]),
+%     ok.
+
 mem() ->
-    [{K,V / math:pow(1024,3)} || {K,V} <- erlang:memory()].
+  [{X, erlang:round(recon_alloc:memory(X) / 1024)} || X <- [allocated, used, usage]].
+    % [{K,V / math:pow(1024,3)} || {K,V} <- erlang:memory()].
     % [erlang:garbage_collect(X) || X <- processes()].
 % match_crdt(Id, Tab) ->
 %   % [[{MatchedId, Data}] | Rest ] = ets:match(Tab, '$1').

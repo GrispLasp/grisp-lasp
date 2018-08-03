@@ -111,3 +111,15 @@ utilization_sample(S1,S2) ->
                   end
                 end, LS),
     LS.
+
+
+get_nav() ->
+    Slot = grisp:device(spi1),
+    case Slot of
+        {no_device_connected, spi1} ->
+            {error, no_device, no_ref};
+        {device, spi1, pmod_nav, Pid, Ref} when is_pid(Pid); is_reference(Ref) ->
+            {pmod_nav, Pid, Ref};
+        _ ->
+            {error, unknown, no_ref}
+    end.

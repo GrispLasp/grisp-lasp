@@ -1,6 +1,94 @@
 -module(node_generic_tasks_functions).
 -compile(export_all).
 
+nav_sensor(Comp, Register) ->
+  % grisp:add_device(spi1, pmod_nav),
+  % logger:log(info, "Value = ~p ~n", pmod_nav:read(alt, [press_out])),
+  logger:log(info, "Value = ~p ~n", pmod_nav:read(Comp, [Register])).
+
+meteorological_statistics(SampleCount, SampleInterval) ->
+    % Must check if module is available
+    {pmod_nav, Pid, _Ref} = node_util:get_nav(),
+    % meteo = shell:rd(meteo, {press = [], temp = []}),
+    % State = #{press => [], temp => [], time => []},
+    State = maps:new(),
+    State1 = maps:put(press, [], State),
+    State2 = maps:put(temp, [], State1),
+    State3 = maps:put(time, [], State2),
+    FoldFun = fun
+        (AccIn, Elem) when is_integer(Elem) andalso is_map(AccIn) ->
+            timer:sleep(SampleInterval),
+            T = node_stream_worker:maybe_get_time(),
+            [Pr, Tmp] = gen_server:call(Pid, {read, alt, [press_out, temp_out], #{}}),
+            #{press => maps:get(press, AccIn) ++ Pr,
+            temp => maps:get(temp, AccIn) ++ Tmp,
+            time => maps:get(time, AccIn) ++ [T]}
+    end,
+
+    M = lists:foldl(FoldFun, State3, lists:seq(1, SampleCount)),
+    [Pressures, Temperatures, Epochs] = maps:values(M),
+    Result = #{measures => lists:zip3(Epochs, Pressures, Temperatures),
+        pmean => 'Elixir.Numerix.Statistics':mean(Pressures),
+        pvar => 'Elixir.Numerix.Statistics':variance(Pressures),
+        tmean => 'Elixir.Numerix.Statistics':mean(Temperatures),
+        tvar => 'Elixir.Numerix.Statistics':variance(Temperatures),
+        cov => 'Elixir.Numerix.Statistics':covariance(Pressures, Temperatures)},
+    % L = lists:map(MapFun, lists:seq(1, SampleCount)),
+    {ok, Id, _, _, _} = hd(node_util:declare_crdts([meteostats])),
+    lasp:update(Id, {add, {node(), Result}}, self()).
+
+% MapFun = fun
+%     (Elem) when is_integer(Elem) ->
+%         timer:sleep(SampleInterval),
+%         T = node_stream_worker:maybe_get_time(),
+%         Mes = gen_server:call(Pid, {read, alt, [press_out, temp_out], #{}}),
+%         {T, Mes}
+% end,
+%#{press := Press, temp := Temp, time := Time}
+% L = lists:map(MapFun, lists:seq(1, SampleCount)),
+
+% Pressures = maps:get(press, M),
+% Temperatures = maps:get(temp, M),
+% Epochs = maps:get(time, M),
+% [ X || X <- maps:values(M)],
+    % ReceiverFun = fun (State#meteo{press = PList}) ->
+    %     receive
+    %
+    %     after
+    %         SampleInterval ->
+    %             P = gen_server:call(Pid, {read, alt, [press_out], #{}}),
+    %             NewState = #meteo{press = PList ++ P, temp = []},
+    %             self() ! NewState
+    %     end.
+    %
+    % ok.
+        % ReceiverFun = fun () ->
+        %     receive
+        %         Data when is_list(Data) ->
+        %             disconnect(),
+        %             idle();
+        %         {connect, B} ->
+        %             B ! {busy, self()},
+        %             wait_for_onhook()
+        %     end,
+        %
+        %
+        % PFun = fun
+        %     (SampleInterval) ->
+        %         [PressOut] = erlang:send_after(SampleInterval, Pid, {read, alt, [press_out], []})
+        % end
+        % wait_for_onhook() ->
+        %     receive
+        %         Data when is_list(Data) ->
+        %             disconnect(),
+        %             idle();
+        %         {connect, B} ->
+        %             B ! {busy, self()},
+        %             wait_for_onhook()
+        %     end.
+
+
+
 temp_sensor({Counter, Temps}, PeriodicTime) ->
 
   WaitFun = fun(State) ->
