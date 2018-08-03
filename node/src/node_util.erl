@@ -123,3 +123,18 @@ get_nav() ->
         _ ->
             {error, unknown, no_ref}
     end.
+
+
+maps_update(K, F, V0, Map) ->
+     try maps:get(K, Map) of
+         V1 ->
+             maps:put(K, F(V1), Map)
+     catch
+         error:{badkey, K} ->
+             maps:put(K, V0, Map)
+     end.
+
+maps_merge(Fun, Map1, Map2) ->
+     maps:fold(fun (K, V1, Map) ->
+                   maps_update(K, fun (V2) -> Fun(K, V1, V2) end, V1, Map)
+               end, Map2, Map1).

@@ -25,7 +25,7 @@ VERSION 	       ?= 0.1.0
 
 # .PHONY: grispbuild rel deps test plots dcos logs fpm no-cfg-build tarball-build build
 
-.PHONY: compile shell deploy rel stage \
+.PHONY: compile shell 2shell 3shell deploy rel stage \
 	# cleaning targets :
 	clean buildclean grispclean cacheclean elixirclean checkoutsclean ⁠\
 	# currently not working targets :
@@ -82,7 +82,13 @@ checkoutsclean:
 #
 
 shell:
-	$(REBAR) as test shell --sname $(GRISPAPP) --setcookie $(COOKIE)
+	$(REBAR) as test shell --sname $(GRISPAPP) --setcookie $(COOKIE) --apps node
+
+2shell:
+	$(REBAR) as test shell --sname $(GRISPAPP)2 --setcookie $(COOKIE) --apps node
+
+3shell:
+	$(REBAR) as test shell --sname $(GRISPAPP)3 --setcookie $(COOKIE) --apps node
 
 
 ##
