@@ -124,7 +124,7 @@ get_nav() ->
             {error, unknown, no_ref}
     end.
 
-
+%% http://erlang.org/pipermail/erlang-questions/2015-August/085743.html
 maps_update(K, F, V0, Map) ->
      try maps:get(K, Map) of
          V1 ->
