@@ -60,28 +60,28 @@ handle_call(_Message, _From, CurrentList) ->
     {reply, {ok, CurrentList}, CurrentList}.
 
 handle_info({full_ping}, CurrentList) ->
-    logger:log(info, "=== Starting a full ping ===~n"),
+    logger:log(notice, "=== Starting a full ping ===~n"),
     T1 = os:timestamp(),
     PingedNodes = ping(CurrentList, 1, full),
     T2 = os:timestamp(),
     Time = timer:now_diff(T2, T1),
     logger:log(info, "=== Time to do a full ping ~ps ===~n",
 	      [Time / 1000000]),
-    logger:log(info, "=== Nodes that answered back ~p ===~n",
+    logger:log(notice, "=== Nodes that answered back ~p ===~n",
 	      [PingedNodes]),
-    {noreply, PingedNodes, 180000};
+    {noreply, PingedNodes, 30000};
 handle_info(timeout, CurrentList) ->
-    logger:log(info, "=== Timeout of full ping, restarting "
-	      "after 180s ===~n"),
+    logger:log(notice, "=== Timeout of full ping, restarting "
+	      "after 90s ===~n"),
     T1 = os:timestamp(),
     PingedNodes = ping(CurrentList, 1, full),
     T2 = os:timestamp(),
     Time = timer:now_diff(T2, T1),
     logger:log(info, "=== Time to do a full ping ~ps ===~n",
 	      [Time / 1000000]),
-    logger:log(info, "=== Nodes that answered back ~p ===~n",
+    logger:log(notice, "=== Nodes that answered back ~p ===~n",
 	      [PingedNodes]),
-    {noreply, PingedNodes, 180000};
+    {noreply, PingedNodes, 30000};
 handle_info(Msg, CurrentList) ->
     logger:log(info, "=== Unknown message: ~p~n", [Msg]),
     {noreply, CurrentList}.
@@ -114,7 +114,9 @@ ping(PingList, N, Type) when N > 0 ->
 			AccIn ++ V
 	end, [], node_config:get(remote_hosts, #{})),
     % List = (?BOARDS((?IGOR))) ++ ['nodews@Laymer-3'],
-    List = (?BOARDS((?IGOR))) ++ Remotes,
+    % List = (?BOARDS((?DAN))) ++ Remotes,
+		% List = ['node@GrispAdhoc', 'node2@GrispAdhoc'],
+		List = (?BOARDS((?ALL))),
     % List = [generic_node_1@GrispAdhoc,generic_node_2@GrispAdhoc],
     ListWithoutSelf = lists:delete(node(), List),
     Ping = fun (X) -> net_adm:ping(X) == pong end,
@@ -126,11 +128,11 @@ ping(PingList, N, Type) when N > 0 ->
     ListToJoin = lists:filter(Ping, ToPing),
     if Type == full -> ping(ListToJoin, 0, full);
        true ->
-	   grisp_led:flash(1, blue, 500),
+	   % grisp_led:flash(1, blue, 500),
 	   ping(ListToJoin, N - 1, partial)
     end;
 ping(PingList, 0, _Type) ->
-    grisp_led:color(1, green),
+    % grisp_led:color(1, green),
     Join = fun (X) -> lasp_peer_service:join(X) end,
     lists:foreach(Join, PingList),
     PingList.

@@ -76,9 +76,9 @@ end).
 %%====================================================================
 
 
--define(ALL,     lists:seq(1,12,1) ).
+-define(ALL,     lists:seq(1,2) ).
 -define(ALEX,     lists:seq(1,6,1) ).
--define(DAN,      lists:seq(7,9,1) ).
+-define(DAN,      lists:seq(1,2,3) ).
 -define(IGOR,   lists:seq(10,12,1) ).
 
 % -define(BOARDS(Name),   [ list_to_atom(lists:flatten(unicode:characters_to_list(["node@my_grisp_board", "_", integer_to_list(X)], utf8))) || X <- Name ] ).
@@ -163,6 +163,13 @@ end).
 	  shutdown => brutal_kill,
 	  modules => [node_storage_server]}).
 
+-define(NODE_BENCHMARK_SPEC,
+	#{id => node_benchmark_server,
+	  start => {node_benchmark_server, start_link, []},
+	  restart => permanent, type => worker,
+	  shutdown => brutal_kill,
+	  modules => [node_benchmark_server]}).
+
 -define(WORKER_SPECS_MAP,
   #{generic_worker => ?GENERIC_SERVER_SPEC,
     generic_tasks_server => ?GENERIC_TASKS_SERVER_SPEC,
@@ -174,4 +181,5 @@ end).
     node_stream_worker_emu => ?NODE_STREAM_WORKER_SPEC(emu),
     sensor_client_worker => ?SENSOR_CLIENT_SPEC,
     node_utils_server => ?NODE_UTILS_SPEC,
-    node_storage_server => ?NODE_STORAGE_SPEC}).
+    node_storage_server => ?NODE_STORAGE_SPEC,
+    node_benchmark_server => ?NODE_BENCHMARK_SPEC}).

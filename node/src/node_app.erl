@@ -49,11 +49,7 @@ start(_StartType, _StartArgs) ->
     logger:log(notice, "Application Master started Node app ~n"),
     start_primary_workers(primary_workers),
     start_primary_workers(distributed_workers),
-    add_measurements(),
-    % lasp:query({<<"temp">>, state_orset}).
-    % lasp:query({<<"states">>, state_orset}).
-    % Adding a new task in Lasp :
-    % add_task1(),
+    % add_measurements(),
 
     LEDs = [1, 2],
     [grisp_led:flash(L, aqua, 500) || L <- LEDs],
@@ -65,7 +61,7 @@ start(_StartType, _StartArgs) ->
     % node_generic_tasks_worker:start_task(tasknav),
 
 
-    {_Task, _Targets, _Fun, _} = add_task_meteo(),
+    % {_Task, _Targets, _Fun, _} = add_task_meteo(),
     % ?PAUSE10,
     % {_Task, _Targets, _Fun, _} = add_task_meteo_union(),
 

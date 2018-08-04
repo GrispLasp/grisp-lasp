@@ -4,7 +4,7 @@
 nav_sensor(Comp, Register) ->
   % grisp:add_device(spi1, pmod_nav),
   % logger:log(info, "Value = ~p ~n", pmod_nav:read(alt, [press_out])),
-  logger:log(info, "Value = ~p ~n", pmod_nav:read(Comp, [Register])).
+  logger:log(notice, "Value = ~p ~n", pmod_nav:read(Comp, [Register])).
 
 meteorological_statistics(SampleCount, SampleInterval, Trigger) ->
     % Must check if module is available
@@ -48,7 +48,8 @@ meteorological_statistics(SampleCount, SampleInterval, Trigger) ->
     % {ok, {_, _, _, _}} = lasp:update(ExecId, {add, NewId}, self()),
     lasp:update(ExecId, {add, NewId}, self()),
     % lasp:update({"<<chunks>>", state_gcounter}, increment, self()),
-
+    % node_app:add_task_meteo().
+% {ok, S3} = lasp:query({<<"node@my_grisp_board_1">>, state_orset}), sets:to_list(S2).
     spawn(fun() ->
         lasp:read(ExecId, {cardinality, Trigger}),
         % ExecId = node_util:atom_to_lasp_identifier(executors,state_gset),
