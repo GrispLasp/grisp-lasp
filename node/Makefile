@@ -29,9 +29,11 @@ VERSION 	       ?= 0.1.0
 
 .PHONY: compile testshell shell 2shell 3shell deploy 10deploy 11deploy rel stage \
 	# cleaning targets :
-	clean buildclean grispclean cacheclean elixirclean checkoutsclean ⁠\
+	wipe clean buildclean grispclean cacheclean elixirclean checkoutsclean ⁠\
 	# currently not working targets :
-	build no-cfg-build tarball-build
+	build no-cfg-build tarball-build \
+	# Others
+	test-app-src prod-app-src
 
 all: compile
 
@@ -58,11 +60,13 @@ tarball-build:
 # Cleaning targets
 #
 
-clean: buildclean grispclean elixirclean checkoutsclean cacheclean
-	$(REBAR) clean
+wipe: clean grispclean
 	$(REBAR) update
 	$(REBAR) unlock
 	$(REBAR) upgrade
+
+clean: buildclean elixirclean checkoutsclean cacheclean
+	$(REBAR) clean
 
 buildclean:
 	rm -rdf $(BASE_DIR)/_build
@@ -83,38 +87,46 @@ checkoutsclean:
 # Test targets
 #
 
-testshell:
+testshell: test-app-src
 	$(REBAR) as test shell --sname $(GRISPAPP) --setcookie $(COOKIE)
 
-shell:
+shell: test-app-src
 	$(REBAR) as test shell --sname $(GRISPAPP) --setcookie $(COOKIE) --apps node
 
-2shell:
+2shell: test-app-src
 	$(REBAR) as test shell --sname $(GRISPAPP)2 --setcookie $(COOKIE) --apps node
 
-3shell:
+3shell: test-app-src
 	$(REBAR) as test shell --sname $(GRISPAPP)3 --setcookie $(COOKIE) --apps node
+
+test-app-src:
+	cp $(BASE_DIR)/src/node.app.src $(BASE_DIR)/src/node.app.src.prod
+	cp $(DEPLOYMENTS_DIR)/node.app.src $(BASE_DIR)/src/node.app.src
+
 
 
 ##
 ## Release targets
 ##
 
-rel:
+rel: prod-app-src
 	$(REBAR) release
 
-stage:
+stage: prod-app-src
 	$(REBAR) release -d
 
-deploy:
+deploy: prod-app-src
 	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
 
-10deploy:
+10deploy: prod-app-src
 	cp $(DEPLOYMENTS_DIR)/10/grisp.ini.mustache $(GRISPFILES_DIR)/grisp.ini.mustache
 	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
 
-11deploy:
+11deploy: prod-app-src
 	cp $(DEPLOYMENTS_DIR)/11/grisp.ini.mustache $(GRISPFILES_DIR)/grisp.ini.mustache
 	$(REBAR) grisp deploy -n $(GRISPAPP) -v $(VERSION)
+
+prod-app-src:
+	cp $(BASE_DIR)/src/node.app.src.prod $(BASE_DIR)/src/node.app.src
 
 include tools.mk
