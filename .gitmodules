@@ -4,9 +4,6 @@
 [submodule "Dissertation"]
 	path = Dissertation
 	url = https://git.overleaf.com/16203742gcqdcymdhfxf
-[submodule "node/_checkouts/grisp"]
-	path = node/_checkouts/grisp
-	url = https://github.com/GrispLasp/grisp.git
 [submodule "node/_checkouts/partisan"]
 	path = node/_checkouts/partisan
 	url = https://github.com/GrispLasp/partisan.git
